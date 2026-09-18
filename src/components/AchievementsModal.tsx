@@ -1,13 +1,15 @@
 import React from 'react';
 import { Achievement, UserGamification } from '../types/finance';
 import { calculateLevelInfo } from '../achievements/achievementEngine';
-import { Trophy, X, Flame, Shield, ShieldCheck, Globe, PiggyBank, ArrowRightLeft, CheckCircle2, TrendingDown, Sparkles, Lock } from 'lucide-react';
+import { Trophy, X, Flame, Shield, ShieldCheck, Globe, PiggyBank, ArrowRightLeft, CheckCircle2, TrendingDown, Sparkles } from 'lucide-react';
+import { Language, getTranslation, getAchievementText, getLocalizedLevelTitle } from '../services/i18n';
 
 interface AchievementsModalProps {
   isOpen: boolean;
   onClose: () => void;
   achievements: Achievement[];
   gamification: UserGamification;
+  lang?: Language;
 }
 
 export const AchievementsModal: React.FC<AchievementsModalProps> = ({
@@ -15,11 +17,14 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
   onClose,
   achievements,
   gamification,
+  lang = 'ru',
 }) => {
   if (!isOpen) return null;
 
+  const t = getTranslation(lang);
   const levelInfo = calculateLevelInfo(gamification.xp);
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
+  const levelTitle = getLocalizedLevelTitle(gamification.level, lang);
 
   const getAchIcon = (iconName: string, isUnlocked: boolean) => {
     const props = { size: 22, color: isUnlocked ? '#1e1302' : 'var(--text-muted)' };
@@ -55,9 +60,11 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
               <Trophy size={20} color="#150f02" />
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 800 }}>Зал Ачивок и Наград</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 800 }}>{t.achievementsHallTitle}</h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Разблокировано {unlockedCount} из {achievements.length} достижений
+                {lang === 'ru'
+                  ? `Разблокировано ${unlockedCount} из ${achievements.length} достижений`
+                  : `Unlocked ${unlockedCount} of ${achievements.length} trophies`}
               </p>
             </div>
           </div>
@@ -79,10 +86,10 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div>
               <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-joy)', fontWeight: 800 }}>
-                Текущий ранг
+                {lang === 'ru' ? 'Текущий ранг' : 'Current Rank'}
               </span>
               <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>
-                {gamification.levelTitle}
+                {levelTitle}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -90,7 +97,7 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
                 {gamification.xp} XP
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                До уровня {levelInfo.level + 1}: {levelInfo.xpForNext - levelInfo.xpCurrent} XP
+                {t.progressToLevel.replace('{nextLevel}', (levelInfo.level + 1).toString())}: {levelInfo.xpForNext - levelInfo.xpCurrent} XP
               </div>
             </div>
           </div>
@@ -111,62 +118,65 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
 
         {/* List of achievements */}
         <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
-          {achievements.map((ach) => (
-            <div
-              key={ach.id}
-              className={`achievement-card ${ach.isUnlocked ? 'unlocked' : ''}`}
-            >
-              <div className="ach-icon-box">
-                {getAchIcon(ach.icon, ach.isUnlocked)}
-              </div>
+          {achievements.map((ach) => {
+            const text = getAchievementText(ach.id, ach.title, ach.description, lang);
+            return (
+              <div
+                key={ach.id}
+                className={`achievement-card ${ach.isUnlocked ? 'unlocked' : ''}`}
+              >
+                <div className="ach-icon-box">
+                  {getAchIcon(ach.icon, ach.isUnlocked)}
+                </div>
 
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: ach.isUnlocked ? '#fff' : 'var(--text-secondary)' }}>
-                    {ach.title}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: ach.isUnlocked ? '#fff' : 'var(--text-secondary)' }}>
+                      {text.title}
+                    </div>
+                    {ach.isUnlocked && (
+                      <span style={{ fontSize: '10px', background: 'rgba(255,183,3,0.2)', color: '#ffb703', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                        {t.unlocked}
+                      </span>
+                    )}
                   </div>
-                  {ach.isUnlocked && (
-                    <span style={{ fontSize: '10px', background: 'rgba(255,183,3,0.2)', color: '#ffb703', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                      Выполнено
-                    </span>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {text.desc}
+                  </div>
+
+                  {!ach.isUnlocked && ach.targetCount > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                      <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px' }}>
+                        <div
+                          style={{
+                            width: `${Math.min(100, Math.round((ach.currentProgress / ach.targetCount) * 100))}%`,
+                            height: '100%',
+                            background: 'var(--accent-emerald)',
+                            borderRadius: '2px',
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                        {ach.currentProgress} / {ach.targetCount}
+                      </span>
+                    </div>
                   )}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  {ach.description}
+
+                <div style={{ textAlign: 'right', minWidth: '70px' }}>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      color: ach.isUnlocked ? 'var(--accent-joy)' : 'var(--text-muted)',
+                    }}
+                  >
+                    +{ach.rewardXp} XP
+                  </span>
                 </div>
-
-                {!ach.isUnlocked && ach.targetCount > 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                    <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px' }}>
-                      <div
-                        style={{
-                          width: `${Math.min(100, Math.round((ach.currentProgress / ach.targetCount) * 100))}%`,
-                          height: '100%',
-                          background: 'var(--accent-emerald)',
-                          borderRadius: '2px',
-                        }}
-                      />
-                    </div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                      {ach.currentProgress} / {ach.targetCount}
-                    </span>
-                  </div>
-                )}
               </div>
-
-              <div style={{ textAlign: 'right', minWidth: '70px' }}>
-                <span
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    color: ach.isUnlocked ? 'var(--accent-joy)' : 'var(--text-muted)',
-                  }}
-                >
-                  +{ach.rewardXp} XP
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

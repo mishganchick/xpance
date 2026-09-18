@@ -1,5 +1,5 @@
-import React from 'react';
 import { PlusCircle, CreditCard, PieChart, Trophy } from 'lucide-react';
+import { Language, getTranslation } from '../services/i18n';
 
 export type MobileTab = 'input' | 'accounts' | 'radar' | 'achievements';
 
@@ -7,9 +7,11 @@ interface BottomNavProps {
   activeTab: MobileTab;
   onTabChange: (tab: MobileTab) => void;
   streakDays: number;
+  lang: Language;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, streakDays }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, streakDays, lang }) => {
+  const t = getTranslation(lang);
   return (
     <nav className="mobile-bottom-nav">
       <button
@@ -17,7 +19,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, st
         onClick={() => onTabChange('input')}
       >
         <PlusCircle size={20} />
-        <span>Ввод</span>
+        <span>{t.tabInput}</span>
       </button>
 
       <button
@@ -25,7 +27,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, st
         onClick={() => onTabChange('accounts')}
       >
         <CreditCard size={20} />
-        <span>Счета</span>
+        <span>{t.tabAccounts}</span>
       </button>
 
       <button
@@ -33,7 +35,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, st
         onClick={() => onTabChange('radar')}
       >
         <PieChart size={20} />
-        <span>Радар</span>
+        <span>{t.tabRadar}</span>
       </button>
 
       <button
@@ -46,7 +48,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, st
             <span className="bottom-nav-badge">🔥</span>
           )}
         </div>
-        <span>Ачивки</span>
+        <span>{t.tabAchievements}</span>
       </button>
     </nav>
   );

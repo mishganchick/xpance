@@ -236,6 +236,28 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
+.lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.lang-toggle-btn:hover {
+  background: rgba(0, 230, 153, 0.15);
+  border-color: rgba(0, 230, 153, 0.4);
+  color: var(--accent-emerald);
+}
+
 .net-worth-amount {
   font-size: 24px;
   font-weight: 900;

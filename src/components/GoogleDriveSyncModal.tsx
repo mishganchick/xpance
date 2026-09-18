@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AppDataVault } from '../types/finance';
 import { downloadBackupFile, uploadBackupFile, driveSync } from '../services/googleDriveSync';
 import { Cloud, Download, Upload, Check, X, ShieldCheck, RefreshCw, Key, Trash2 } from 'lucide-react';
+import { Language, getTranslation } from '../services/i18n';
 
 interface GoogleDriveSyncModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface GoogleDriveSyncModalProps {
   onClearDatabase?: () => void;
   onLoadDemo?: () => void;
   onResetToDemo?: () => void;
+  lang?: Language;
 }
 
 export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
@@ -21,7 +23,9 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
   onClearDatabase,
   onLoadDemo,
   onResetToDemo,
+  lang = 'ru',
 }) => {
+  const t = getTranslation(lang);
   const [clientId, setClientId] = useState(vault.syncConfig.clientId || '');
   const [statusMessage, setStatusMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,7 +34,9 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
 
   const handleDownloadBackup = () => {
     downloadBackupFile(vault);
-    setStatusMessage('Файл бэкапа xpance_vault.json успешно скачан! Сохраните его в свой Google Диск.');
+    setStatusMessage(lang === 'ru'
+      ? 'Файл бэкапа xpance_vault.json успешно скачан! Сохраните его в свой Google Диск.'
+      : 'Vault backup file xpance_vault.json downloaded successfully! Store it in your Google Drive.');
   };
 
   const handleUploadBackup = async () => {
@@ -38,9 +44,11 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
       setIsProcessing(true);
       const imported = await uploadBackupFile();
       onVaultImported(imported);
-      setStatusMessage('Данные успешно восстановлены из файла бэкапа!');
+      setStatusMessage(lang === 'ru'
+        ? 'Данные успешно восстановлены из файла бэкапа!'
+        : 'Data restored successfully from backup vault!');
     } catch (err: any) {
-      setStatusMessage(`Ошибка загрузки: ${err.message}`);
+      setStatusMessage(lang === 'ru' ? `Ошибка загрузки: ${err.message}` : `Import error: ${err.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -65,9 +73,9 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               <Cloud size={20} color="#051410" />
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 800 }}>Синхронизация с Google Drive</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 800 }}>{t.backupModalTitle}</h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Приватный Local-First учет без сторонних баз данных
+                {lang === 'ru' ? 'Приватный Local-First учет без сторонних баз данных' : 'Private Local-First finances without 3rd-party databases'}
               </p>
             </div>
           </div>
@@ -91,7 +99,15 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
         >
           <ShieldCheck size={20} color="#00e699" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div style={{ fontSize: '12px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-            Ваши финансовые данные хранятся <strong style={{ color: '#fff' }}>только на ваших устройствах</strong> в формате файла <code>xpance_vault.json</code>. Никакие третьи лица и сервера не имеют доступа к вашим счетам.
+            {lang === 'ru' ? (
+              <>
+                Ваши финансовые данные хранятся <strong style={{ color: '#fff' }}>только на ваших устройствах</strong> в формате файла <code>xpance_vault.json</code>. Никакие третьи лица и сервера не имеют доступа к вашим счетам.
+              </>
+            ) : (
+              <>
+                Your financial data is stored <strong style={{ color: '#fff' }}>strictly on your own devices</strong> in <code>xpance_vault.json</code>. No third-party servers ever touch your finances.
+              </>
+            )}
           </div>
         </div>
 
@@ -114,10 +130,10 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
         {/* SECTION 1: One-click local backup */}
         <div style={{ marginBottom: '24px' }}>
           <h4 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-            1. Файловый бэкап Google Drive (Без настроек API)
+            {t.sectionBackupFile}
           </h4>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Сохраните файл бэкапа в папку Google Диска на телефоне или компьютере, либо восстановите актуальное состояние:
+            {t.backupFileDesc}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -133,7 +149,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               }}
             >
               <Download size={16} color="var(--accent-emerald)" />
-              <span>Скачать бэкап JSON</span>
+              <span>{t.downloadBackupBtn}</span>
             </button>
 
             <button
@@ -149,7 +165,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               }}
             >
               <Upload size={16} color="var(--accent-joy)" />
-              <span>{isProcessing ? 'Загрузка...' : 'Открыть из Google Drive'}</span>
+              <span>{isProcessing ? (lang === 'ru' ? 'Загрузка...' : 'Loading...') : t.restoreBackupBtn}</span>
             </button>
           </div>
         </div>
@@ -158,14 +174,14 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
         <div style={{ marginBottom: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
           <h4 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Key size={14} />
-            <span>2. Прямая авто-синхронизация через Google OAuth</span>
+            <span>{t.sectionOAuth}</span>
           </h4>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-            Укажите Google OAuth Client ID для фонового сохранения прямо в папку Google Диска:
+            {t.oauthDesc}
           </p>
           <input
             type="text"
-            placeholder="например: 123456789-abc.apps.googleusercontent.com"
+            placeholder={lang === 'ru' ? 'например: 123456789-abc.apps.googleusercontent.com' : 'e.g.: 123456789-abc.apps.googleusercontent.com'}
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             style={{ width: '100%', fontSize: '12px', marginBottom: '12px' }}
@@ -173,12 +189,12 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
           <button
             onClick={() => {
               driveSync.setClientId(clientId);
-              setStatusMessage('Client ID сохранён.');
+              setStatusMessage(lang === 'ru' ? 'Client ID сохранён.' : 'Client ID saved.');
             }}
             className="cat-pill"
             style={{ fontSize: '12px', padding: '8px 14px' }}
           >
-            Сохранить Client ID
+            {t.saveClientIdBtn}
           </button>
         </div>
 
@@ -186,15 +202,15 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
         <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-ruby)' }}>Очистить базу данных</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Удалить все операции и начать вести бюджет с нуля</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-ruby)' }}>{t.clearDbTitle}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.clearDbDesc}</div>
             </div>
             <button
               onClick={() => {
-                if (confirm('Вы уверены, что хотите полностью очистить базу данных? Все операции и балансы будут сброшены.')) {
+                if (confirm(t.clearDbConfirm)) {
                   if (onClearDatabase) onClearDatabase();
                   else if (onResetToDemo) onResetToDemo();
-                  setStatusMessage('База данных успешно очищена!');
+                  setStatusMessage(lang === 'ru' ? 'База данных успешно очищена!' : 'Database cleared successfully!');
                 }
               }}
               className="cat-pill"
@@ -209,21 +225,21 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               }}
             >
               <Trash2 size={12} />
-              <span>Очистить всё</span>
+              <span>{t.clearAllBtn}</span>
             </button>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px' }}>
             <div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Демонстрационные данные</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Заполнить тестовыми счетами и операциями</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.demoDataTitle}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.demoDataDesc}</div>
             </div>
             <button
               onClick={() => {
-                if (confirm('Загрузить тестовые счета и примеры операций?')) {
+                if (confirm(t.loadDemoConfirm)) {
                   if (onLoadDemo) onLoadDemo();
                   else if (onResetToDemo) onResetToDemo();
-                  setStatusMessage('Демо-данные загружены!');
+                  setStatusMessage(lang === 'ru' ? 'Демо-данные загружены!' : 'Demo data loaded successfully!');
                 }
               }}
               style={{
@@ -240,7 +256,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               }}
             >
               <RefreshCw size={12} />
-              <span>Загрузить демо</span>
+              <span>{t.loadDemoBtn}</span>
             </button>
           </div>
         </div>

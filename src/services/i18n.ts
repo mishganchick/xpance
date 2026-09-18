@@ -1,0 +1,333 @@
+export type Language = 'ru' | 'en';
+
+export const translations = {
+  ru: {
+    // Header
+    brandSubtitle: 'Level Up Wealth',
+    netWorthLabel: 'Общий капитал',
+    viewModeDesktop: 'ПК',
+    viewModeMobile: 'Мобилка',
+    online: 'Онлайн',
+    offline: 'Офлайн (Локально)',
+    streakDays: 'дн. стрик',
+    level: 'ур.',
+    backupTooltip: 'Резервная копия и Google Drive',
+    achievementsTooltip: 'Зал ачивок',
+
+    // Bottom Navigation
+    tabInput: 'Ввод',
+    tabAccounts: 'Счета',
+    tabRadar: 'Радар',
+    tabAchievements: 'Ачивки',
+
+    // Quick Expense Input
+    expense: 'Расход',
+    income: 'Доход',
+    accountLabel: 'Счёт операции:',
+    amountPlaceholder: '0',
+    rationalitySection: 'Категория осознанности',
+    tagBaseTitle: '🌿 База',
+    tagBaseDesc: 'Обязательное',
+    tagJoyTitle: '✨ В радость',
+    tagJoyDesc: 'Для души',
+    tagImpulseTitle: '⚠️ Импульс',
+    tagImpulseDesc: 'Спонтанно',
+    categoryLabel: 'Категория',
+    notePlaceholder: 'Заметка (необязательно)',
+    addExpenseBtn: 'Внести расход',
+    addIncomeBtn: 'Внести доход',
+    recentTransactions: 'Последние операции',
+    emptyDbPrompt: '🌱 База данных пустая. Внесите свой первый расход или доход выше!',
+
+    // Accounts
+    accountsTitle: 'Счета и Кошельки',
+    transferBtn: 'Перевод',
+    newAccountBtn: 'Новый счёт',
+    editAccountTitle: 'Редактировать счёт',
+    addAccountTitle: 'Добавить счёт / банк',
+    accountNameLabel: 'Название счёта / карты',
+    accountNamePlaceholder: 'например, Т-Банк Black или Наличные USD',
+    bankLabel: 'Банк / Организация',
+    bankPlaceholder: 'Т-Банк, Сбер, Revolut и т.д.',
+    accountTypeLabel: 'Тип счёта',
+    currencyLabel: 'Валюта счёта',
+    balanceLabel: 'Текущий баланс',
+    colorLabel: 'Цвет карты',
+    interestRateLabel: '% годовых',
+    saveBtn: 'Сохранить',
+    cancelBtn: 'Отмена',
+    executeTransferBtn: 'Выполнить перевод',
+    transferModalTitle: 'Перевод между своими счетами',
+    fromAccount: 'Списать со счёта',
+    toAccount: 'Зачислить на счёт',
+    transferAmount: 'Сумма списания',
+    transferTargetAmount: 'Сумма зачисления (по курсу конвертации)',
+    autoCalculated: 'Рассчитается автоматически или введите вручную',
+    deleteAccountConfirm: 'Удалить счёт "{name}"?',
+    cannotDeleteOnlyAccount: 'Нельзя удалить единственный счёт. Добавьте другой счёт перед удалением этого.',
+
+    // Account Types
+    typeDebit: 'Дебетовая карта',
+    typeCredit: 'Кредитная карта',
+    typeSavings: 'Накопительный счёт',
+    typeCash: 'Наличные',
+    typeCrypto: 'Крипто-кошелёк',
+
+    // Desktop Dashboard & Radar
+    impulseRadarTitle: 'Радар осознанности трат',
+    baseCardTitle: '🌿 Base (База)',
+    joyCardTitle: '✨ Joy (В радость)',
+    impulseCardTitle: '⚠️ Impulse (Неразумно)',
+    healthyBudgetMsg: '✨ Отличная финансовая дисциплина! Доля импульсивных покупок минимальна.',
+    alertImpulseMsg: '⚠️ Внимание: доля спонтанных трат превышает 25%. Пора включить режим экономии.',
+    transactionsLedger: 'Журнал операций',
+    allFilter: 'Все операции',
+    searchPlaceholder: 'Поиск по заметке, категории или банку...',
+    noTransactionsFound: 'Операции не найдены',
+    deleteTxConfirm: 'Удалить эту операцию?',
+
+    // Achievements
+    achievementsHallTitle: 'Зал достижений и Награды',
+    financialSageRank: 'Финансовый Мудрец',
+    noviceRank: 'Новичок бюджета',
+    progressToLevel: 'До уровня {nextLevel}',
+    streakCounterTitle: '🔥 Дней подряд без импульсов',
+    allTrophies: 'Все награды',
+    locked: 'Заблокировано',
+    unlocked: 'Получено',
+    xpReward: '+{xp} XP',
+    toastUnlockedTitle: '🎉 Новое достижение разблокировано!',
+
+    // Google Drive & Backup Modal
+    backupModalTitle: 'Резервная копия и Google Drive',
+    localFirstNotice: 'Ваши финансовые данные хранятся только на ваших устройствах в формате файла {fileName}. Никакие третьи лица и сервера не имеют доступа к вашим счетам.',
+    sectionBackupFile: '1. Файл бэкапа (Локально / Google Drive)',
+    backupFileDesc: 'Вы можете в любой момент выгрузить все ваши счета и историю в один защищенный JSON-файл или восстановить их из бэкапа:',
+    downloadBackupBtn: 'Скачать бэкап',
+    restoreBackupBtn: 'Загрузить из файла',
+    sectionOAuth: '2. Прямая авто-синхронизация через Google OAuth',
+    oauthDesc: 'Укажите Google OAuth Client ID для фонового сохранения прямо в папку Google Диска:',
+    saveClientIdBtn: 'Сохранить Client ID',
+    sectionDbManagement: '3. Управление базой данных',
+    clearDbTitle: 'Очистить базу данных',
+    clearDbDesc: 'Удалить все операции и начать вести бюджет с нуля',
+    clearAllBtn: 'Очистить всё',
+    clearDbConfirm: 'Вы уверены, что хотите полностью очистить базу данных? Все операции и балансы будут сброшены.',
+    demoDataTitle: 'Демонстрационные данные',
+    demoDataDesc: 'Заполнить тестовыми счетами и операциями',
+    loadDemoBtn: 'Загрузить демо',
+    loadDemoConfirm: 'Загрузить тестовые счета и примеры операций?',
+
+    // Categories
+    catGroceries: 'Продукты',
+    catDining: 'Кафе и Доставка',
+    catTransport: 'Такси и Транспорт',
+    catImpulse: 'Спонтанные покупки',
+    catHousing: 'Жилье и ЖКХ',
+    catHealth: 'Здоровье и Аптека',
+    catSubs: 'Подписки и Сервисы',
+    catTravel: 'Путешествия',
+    catSalary: 'Зарплата',
+    catFreelance: 'Фриланс / Проекты',
+    catInvest: 'Дивиденды / Вклады',
+  },
+  en: {
+    // Header
+    brandSubtitle: 'Level Up Wealth',
+    netWorthLabel: 'Net Worth',
+    viewModeDesktop: 'Desktop',
+    viewModeMobile: 'Mobile',
+    online: 'Online',
+    offline: 'Offline (Local)',
+    streakDays: 'd streak',
+    level: 'lvl',
+    backupTooltip: 'Backup & Google Drive',
+    achievementsTooltip: 'Trophy Hall',
+
+    // Bottom Navigation
+    tabInput: 'Input',
+    tabAccounts: 'Accounts',
+    tabRadar: 'Radar',
+    tabAchievements: 'Trophies',
+
+    // Quick Expense Input
+    expense: 'Expense',
+    income: 'Income',
+    accountLabel: 'Target Account:',
+    amountPlaceholder: '0',
+    rationalitySection: 'Rationality Category',
+    tagBaseTitle: '🌿 Base',
+    tagBaseDesc: 'Essential',
+    tagJoyTitle: '✨ Joy',
+    tagJoyDesc: 'Mindful',
+    tagImpulseTitle: '⚠️ Impulse',
+    tagImpulseDesc: 'Spontaneous',
+    categoryLabel: 'Category',
+    notePlaceholder: 'Note (optional)',
+    addExpenseBtn: 'Log Expense',
+    addIncomeBtn: 'Log Income',
+    recentTransactions: 'Recent Transactions',
+    emptyDbPrompt: '🌱 Database is fresh and empty. Log your first expense or income above!',
+
+    // Accounts
+    accountsTitle: 'Accounts & Wallets',
+    transferBtn: 'Transfer',
+    newAccountBtn: 'New Account',
+    editAccountTitle: 'Edit Account',
+    addAccountTitle: 'Add Account / Bank',
+    accountNameLabel: 'Account / Card Name',
+    accountNamePlaceholder: 'e.g. T-Bank Black or Cash USD',
+    bankLabel: 'Bank / Institution',
+    bankPlaceholder: 'T-Bank, Chase, Revolut, Cash, etc.',
+    accountTypeLabel: 'Account Type',
+    currencyLabel: 'Currency',
+    balanceLabel: 'Current Balance',
+    colorLabel: 'Card Accent Color',
+    interestRateLabel: '% p.a.',
+    saveBtn: 'Save Changes',
+    cancelBtn: 'Cancel',
+    executeTransferBtn: 'Execute Transfer',
+    transferModalTitle: 'Transfer Between Accounts',
+    fromAccount: 'From Account',
+    toAccount: 'To Account',
+    transferAmount: 'Debit Amount',
+    transferTargetAmount: 'Credit Amount (converted)',
+    autoCalculated: 'Calculated automatically or type manually',
+    deleteAccountConfirm: 'Delete account "{name}"?',
+    cannotDeleteOnlyAccount: 'Cannot delete the only remaining account. Create another account first.',
+
+    // Account Types
+    typeDebit: 'Debit Card',
+    typeCredit: 'Credit Card',
+    typeSavings: 'Savings Account',
+    typeCash: 'Cash',
+    typeCrypto: 'Crypto Wallet',
+
+    // Desktop Dashboard & Radar
+    impulseRadarTitle: 'Mindful Spending Radar',
+    baseCardTitle: '🌿 Base (Essential)',
+    joyCardTitle: '✨ Joy (Mindful)',
+    impulseCardTitle: '⚠️ Impulse (Spontaneous)',
+    healthyBudgetMsg: '✨ Great financial discipline! Impulse spending is well controlled.',
+    alertImpulseMsg: '⚠️ Alert: Spontaneous spending exceeds 25%. Consider tightening your budget.',
+    transactionsLedger: 'Transactions Ledger',
+    allFilter: 'All Entries',
+    searchPlaceholder: 'Search by note, category or bank...',
+    noTransactionsFound: 'No transactions found',
+    deleteTxConfirm: 'Delete this transaction?',
+
+    // Achievements
+    achievementsHallTitle: 'Hall of Trophies & Rewards',
+    financialSageRank: 'Financial Sage',
+    noviceRank: 'Budget Novice',
+    progressToLevel: 'To Level {nextLevel}',
+    streakCounterTitle: '🔥 Consecutive Impulse-Free Days',
+    allTrophies: 'All Trophies',
+    locked: 'Locked',
+    unlocked: 'Unlocked',
+    xpReward: '+{xp} XP',
+    toastUnlockedTitle: '🎉 New Achievement Unlocked!',
+
+    // Google Drive & Backup Modal
+    backupModalTitle: 'Backup & Google Drive Sync',
+    localFirstNotice: 'Your financial data is stored exclusively on your own devices in {fileName}. No third-party servers have access to your finances.',
+    sectionBackupFile: '1. Vault Backup File (Local / Google Drive)',
+    backupFileDesc: 'Export all your accounts and ledger into a single secure JSON vault, or restore from a backup file anytime:',
+    downloadBackupBtn: 'Download Vault',
+    restoreBackupBtn: 'Restore from File',
+    sectionOAuth: '2. Google Drive API Auto-Sync',
+    oauthDesc: 'Enter your Google OAuth Client ID for background sync directly to your personal Google Drive:',
+    saveClientIdBtn: 'Save Client ID',
+    sectionDbManagement: '3. Database Management',
+    clearDbTitle: 'Clear Database',
+    clearDbDesc: 'Wipe all entries and balances to start tracking from scratch',
+    clearAllBtn: 'Clear Everything',
+    clearDbConfirm: 'Are you sure you want to completely clear the database? All transactions and balances will be reset.',
+    demoDataTitle: 'Demo Data',
+    demoDataDesc: 'Pre-fill with sample accounts and transactions',
+    loadDemoBtn: 'Load Demo',
+    loadDemoConfirm: 'Load sample accounts and demo transactions?',
+
+    // Categories
+    catGroceries: 'Groceries',
+    catDining: 'Cafes & Dining',
+    catTransport: 'Transit & Taxi',
+    catImpulse: 'Impulse Shopping',
+    catHousing: 'Housing & Utilities',
+    catHealth: 'Health & Pharmacy',
+    catSubs: 'Subscriptions & Services',
+    catTravel: 'Travel & Trips',
+    catSalary: 'Salary',
+    catFreelance: 'Freelance & Projects',
+    catInvest: 'Dividends & Deposits',
+  },
+};
+
+export function getTranslation(lang: Language) {
+  return translations[lang] || translations.ru;
+}
+
+export const ACHIEVEMENTS_I18N: Record<string, { en: { title: string; desc: string }; ru: { title: string; desc: string } }> = {
+  first_step: {
+    ru: { title: 'Первый шаг к контролю', desc: 'Внесите свою первую операцию расхода или дохода' },
+    en: { title: 'First Step to Control', desc: 'Log your first expense or income transaction' },
+  },
+  streak_3_days: {
+    ru: { title: 'Холодный расчёт', desc: '3 дня подряд без импульсивных трат (метки Impulse)' },
+    en: { title: 'Cool Calculation', desc: '3 consecutive days without impulse spending' },
+  },
+  streak_7_days: {
+    ru: { title: 'Железный контроль', desc: '7 дней подряд без единой неразумной траты' },
+    en: { title: 'Iron Discipline', desc: '7 consecutive days without a single impulse buy' },
+  },
+  streak_14_days: {
+    ru: { title: 'Дзен самурая', desc: '14 дней осознанного потребления без импульсов' },
+    en: { title: 'Samurai Zen', desc: '14 days of mindful consumption without impulses' },
+  },
+  multi_currency_master: {
+    ru: { title: 'Мультивалютный магнат', desc: 'Заведите счета как минимум в 2 разных валютах (например, RUB и USD)' },
+    en: { title: 'Multi-Currency Mogul', desc: 'Open accounts in at least 2 different currencies' },
+  },
+  savings_guardian: {
+    ru: { title: 'Хранитель капитала', desc: 'Создайте накопительный счет или вклад под процент' },
+    en: { title: 'Capital Guardian', desc: 'Create a savings account or high-yield deposit' },
+  },
+  master_of_transfers: {
+    ru: { title: 'Капиталовложение', desc: 'Совершите первый перевод между своими счетами или конвертацию валюты' },
+    en: { title: 'Capital Allocation', desc: 'Make your first transfer between accounts or currency exchange' },
+  },
+  habit_10_logs: {
+    ru: { title: 'Педантичный бухгалтер', desc: 'Внесите 10 любых финансовых операций в журнал' },
+    en: { title: 'Meticulous Accountant', desc: 'Log 10 transactions in your ledger' },
+  },
+  low_impulse_ratio: {
+    ru: { title: 'Разумный гедонист', desc: 'Доля импульсивных трат за последние 30 дней составляет менее 15% от всех расходов' },
+    en: { title: 'Mindful Hedonist', desc: 'Impulse spending makes up less than 15% of all expenses in the last 30 days' },
+  },
+};
+
+export function getAchievementText(achId: string, fallbackTitle: string, fallbackDesc: string, lang: Language) {
+  const item = ACHIEVEMENTS_I18N[achId];
+  if (!item) return { title: fallbackTitle, desc: fallbackDesc };
+  return lang === 'en' ? item.en : item.ru;
+}
+
+export function getLocalizedLevelTitle(level: number, lang: Language): string {
+  const titles = [
+    { minLevel: 1, ru: 'Новичок бюджета', en: 'Budget Novice' },
+    { minLevel: 2, ru: 'Осознанный контролёр', en: 'Mindful Controller' },
+    { minLevel: 3, ru: 'Истребитель импульсов', en: 'Impulse Slayer' },
+    { minLevel: 4, ru: 'Мастер мультивалют', en: 'Multi-Currency Master' },
+    { minLevel: 5, ru: 'Хранитель активов', en: 'Asset Guardian' },
+    { minLevel: 6, ru: 'Стратег капитала', en: 'Capital Strategist' },
+    { minLevel: 7, ru: 'Финансовый Мудрец', en: 'Financial Sage' },
+  ];
+  let res = lang === 'en' ? 'Budget Novice' : 'Новичок бюджета';
+  for (const item of titles) {
+    if (level >= item.minLevel) {
+      res = lang === 'en' ? item.en : item.ru;
+    }
+  }
+  return res;
+}
+

@@ -2,7 +2,7 @@
   "name": "xpance",
   "private": true,
   "version": "1.0.0",
-  "description": "XPance — Осознанный учет личных финансов, мультивалютные счета, радар неразумных трат и геймификация",
+  "description": "XPance — Mindful personal finance tracker with impulse spending radar, multi-currency accounts, and gamification",
   "type": "module",
   "scripts": {
     "dev": "vite",

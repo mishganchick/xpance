@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { Account, Category, RationalityTag, Transaction } from '../types/finance';
 import { CURRENCIES, formatMoney } from '../services/currencyService';
 import { Sparkles, Shield, AlertTriangle, Check, ArrowDownCircle, ArrowUpCircle, CreditCard, ChevronDown } from 'lucide-react';
+import { Language, getTranslation } from '../services/i18n';
 
 interface QuickExpenseInputProps {
   accounts: Account[];
   categories: Category[];
   onAddTransaction: (tx: Omit<Transaction, 'id'>) => void;
+  lang: Language;
 }
 
 export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
   accounts,
   categories,
   onAddTransaction,
+  lang,
 }) => {
+  const t = getTranslation(lang);
   const [txType, setTxType] = useState<'expense' | 'income'>('expense');
   const [amount, setAmount] = useState('');
   const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id || '');
@@ -57,7 +61,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
 
   return (
     <div className="quick-input-card">
-      {/* 1. Segmented Type Toggle (Расход / Доход) */}
+      {/* 1. Segmented Type Toggle */}
       <div className="type-toggle-segmented">
         <button
           type="button"
@@ -65,7 +69,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
           onClick={() => setTxType('expense')}
         >
           <ArrowDownCircle size={16} />
-          <span>Расход</span>
+          <span>{t.expense}</span>
         </button>
         <button
           type="button"
@@ -73,13 +77,13 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
           onClick={() => setTxType('income')}
         >
           <ArrowUpCircle size={16} />
-          <span>Доход</span>
+          <span>{t.income}</span>
         </button>
       </div>
 
       {/* 2. Full-Width Account Selector Row */}
       <div className="account-select-row">
-        <div className="account-select-label">Счёт операции:</div>
+        <div className="account-select-label">{t.accountLabel}</div>
         <div className="account-select-wrapper">
           <CreditCard size={16} color={selectedAccount?.color || 'var(--accent-emerald)'} />
           <select
@@ -133,7 +137,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
               className="preset-pill reset"
               onClick={() => setAmount('')}
             >
-              Сброс
+              {lang === 'en' ? 'Reset' : 'Сброс'}
             </button>
           )}
         </div>
@@ -142,7 +146,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
         {txType === 'expense' && (
           <div style={{ marginBottom: '16px' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Оценка разумности траты:
+              {t.rationalitySection}:
             </div>
             <div className="rationality-selector">
               <button
@@ -154,7 +158,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
                   <Shield size={14} color="#10b981" />
                   <span>Base</span>
                 </div>
-                <div className="rat-btn-sub">Обязательное</div>
+                <div className="rat-btn-sub">{t.tagBaseDesc}</div>
               </button>
 
               <button
@@ -166,7 +170,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
                   <Sparkles size={14} color="#ffb703" />
                   <span>Joy</span>
                 </div>
-                <div className="rat-btn-sub">В радость</div>
+                <div className="rat-btn-sub">{t.tagJoyDesc}</div>
               </button>
 
               <button
@@ -178,7 +182,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
                   <AlertTriangle size={14} color="#ff3b5c" />
                   <span>Impulse</span>
                 </div>
-                <div className="rat-btn-sub">Неразумно</div>
+                <div className="rat-btn-sub">{t.tagImpulseDesc}</div>
               </button>
             </div>
           </div>
@@ -186,31 +190,48 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
 
         {/* 6. Category Selection */}
         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Категория:
+          {t.categoryLabel}:
         </div>
         <div className="categories-slider">
-          {activeCategories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`cat-pill ${selectedCategoryId === cat.id ? 'active' : ''}`}
-              onClick={() => {
-                setSelectedCategoryId(cat.id);
-                if (cat.defaultTag && txType === 'expense') {
-                  setRationalityTag(cat.defaultTag);
-                }
-              }}
-            >
-              <span>{cat.name}</span>
-            </button>
-          ))}
+          {activeCategories.map((cat) => {
+            let catName = cat.name;
+            if (lang === 'en') {
+              if (cat.id === 'cat_groceries') catName = t.catGroceries;
+              else if (cat.id === 'cat_dining') catName = t.catDining;
+              else if (cat.id === 'cat_transport') catName = t.catTransport;
+              else if (cat.id === 'cat_impulse_shopping') catName = t.catImpulse;
+              else if (cat.id === 'cat_housing') catName = t.catHousing;
+              else if (cat.id === 'cat_health') catName = t.catHealth;
+              else if (cat.id === 'cat_subs') catName = t.catSubs;
+              else if (cat.id === 'cat_travel') catName = t.catTravel;
+              else if (cat.id === 'cat_salary') catName = t.catSalary;
+              else if (cat.id === 'cat_freelance') catName = t.catFreelance;
+              else if (cat.id === 'cat_invest') catName = t.catInvest;
+            }
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className={`cat-pill ${selectedCategoryId === cat.id ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedCategoryId(cat.id);
+                  if (cat.defaultTag && txType === 'expense') {
+                    setRationalityTag(cat.defaultTag);
+                  }
+                }}
+              >
+                <span>{catName}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* 7. Note / Comment */}
         <div style={{ marginBottom: '16px' }}>
           <input
             type="text"
-            placeholder="Заметка к операции (необязательно)"
+            placeholder={t.notePlaceholder}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             style={{ width: '100%', fontSize: '13px' }}
@@ -220,7 +241,7 @@ export const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
         {/* 8. Submit Button */}
         <button type="submit" className="btn-primary">
           <Check size={18} />
-          <span>Записать {txType === 'expense' ? 'расход' : 'доход'}</span>
+          <span>{txType === 'expense' ? t.addExpenseBtn : t.addIncomeBtn}</span>
         </button>
       </form>
     </div>

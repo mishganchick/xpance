@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Account, AccountType, CurrencyCode } from '../types/finance';
 import { CURRENCIES, convertCurrency, formatMoney } from '../services/currencyService';
 import { Plus, ArrowRightLeft, CreditCard, Banknote, PiggyBank, Globe, Edit2, Trash2 } from 'lucide-react';
+import { Language, getTranslation } from '../services/i18n';
 
 interface AccountsBarProps {
   accounts: Account[];
@@ -10,6 +11,7 @@ interface AccountsBarProps {
   onUpdateAccount?: (account: Account) => void;
   onDeleteAccount?: (id: string) => void;
   onTransfer: (fromId: string, toId: string, fromAmount: number, toAmount: number, note?: string) => void;
+  lang?: Language;
 }
 
 export const AccountsBar: React.FC<AccountsBarProps> = ({
@@ -19,7 +21,9 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
   onUpdateAccount,
   onDeleteAccount,
   onTransfer,
+  lang = 'ru',
 }) => {
+  const t = getTranslation(lang);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -78,10 +82,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
   const handleDelete = (acc: Account) => {
     if (accounts.length <= 1) {
-      alert('Нельзя удалить единственный счёт. Добавьте другой счёт перед удалением этого.');
+      alert(t.cannotDeleteOnlyAccount);
       return;
     }
-    if (confirm(`Удалить счёт "${acc.name}"?`)) {
+    if (confirm(t.deleteAccountConfirm.replace('{name}', acc.name))) {
       if (onDeleteAccount) {
         onDeleteAccount(acc.id);
       }
@@ -112,7 +116,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
     });
 
     setNewAccName('');
-    setNewAccBalance('');
+    setNewAccBalance('0');
     setShowAddModal(false);
   };
 
@@ -131,7 +135,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
       toAmt = convertCurrency(fromAmt, fromAcc.currency, toAcc.currency);
     }
 
-    onTransfer(transferFromId, transferToId, fromAmt, toAmt, `Перевод: ${fromAcc.name} → ${toAcc.name}`);
+    onTransfer(transferFromId, transferToId, fromAmt, toAmt, `${t.transferBtn}: ${fromAcc.name} → ${toAcc.name}`);
     setTransferAmount('');
     setTransferTargetAmount('');
     setShowTransferModal(false);
@@ -140,16 +144,16 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
   return (
     <section className="accounts-section">
       <div className="section-header">
-        <span className="section-title">Счета и Кошельки ({accounts.length})</span>
+        <span className="section-title">{t.accountsTitle} ({accounts.length})</span>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             className="currency-badge"
             style={{ color: 'var(--accent-joy)', borderColor: 'rgba(255,183,3,0.3)', padding: '4px 10px' }}
             onClick={() => setShowTransferModal(true)}
-            title="Перевод между своими счетами"
+            title={t.transferBtn}
           >
             <ArrowRightLeft size={13} />
-            <span>Перевод</span>
+            <span>{t.transferBtn}</span>
           </button>
         </div>
       </div>
@@ -193,7 +197,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                     }}
-                    title="Редактировать счёт"
+                    title={t.editAccountTitle}
                   >
                     <Edit2 size={12} />
                   </button>
@@ -214,7 +218,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                       }}
-                      title="Удалить счёт"
+                      title={t.deleteAccountConfirm.replace('{name}', acc.name)}
                     >
                       <Trash2 size={12} />
                     </button>
@@ -236,7 +240,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                 )}
                 {acc.type === 'savings' && acc.interestRate && (
                   <div className="account-sub" style={{ color: 'var(--accent-joy)' }}>
-                    {acc.interestRate}% годовых
+                    {acc.interestRate}% {t.interestRateLabel}
                   </div>
                 )}
               </div>
@@ -247,7 +251,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
         {/* Add Account Card Button */}
         <button className="add-account-card" onClick={() => setShowAddModal(true)}>
           <Plus size={20} />
-          <span>Новый счёт</span>
+          <span>{t.newAccountBtn}</span>
         </button>
       </div>
 
@@ -255,14 +259,14 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>Добавить счёт / банк</h2>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>{t.addAccountTitle}</h2>
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexFlow: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Название счёта / карты</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.accountNameLabel}</label>
                 <input
                   type="text"
                   required
-                  placeholder="например, Т-Банк Black или Наличные USD"
+                  placeholder={t.accountNamePlaceholder}
                   value={newAccName}
                   onChange={(e) => setNewAccName(e.target.value)}
                   style={{ width: '100%', marginTop: '4px' }}
@@ -271,40 +275,34 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Банк</label>
-                  <select
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.bankLabel}</label>
+                  <input
+                    type="text"
                     value={newAccBank}
                     onChange={(e) => setNewAccBank(e.target.value)}
+                    placeholder={t.bankPlaceholder}
                     style={{ width: '100%', marginTop: '4px' }}
-                  >
-                    <option value="Т-Банк">Т-Банк</option>
-                    <option value="Сбер">Сбер</option>
-                    <option value="Альфа">Альфа-Банк</option>
-                    <option value="Райф">Райффайзен</option>
-                    <option value="Revolut">Revolut</option>
-                    <option value="Сейф">Наличные / Сейф</option>
-                    <option value="Крипто">Крипто-кошелек</option>
-                  </select>
+                  />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Тип счёта</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.accountTypeLabel}</label>
                   <select
                     value={newAccType}
                     onChange={(e) => setNewAccType(e.target.value as AccountType)}
                     style={{ width: '100%', marginTop: '4px' }}
                   >
-                    <option value="debit">Дебетовая карта</option>
-                    <option value="credit">Кредитная карта</option>
-                    <option value="savings">Накопительный / Вклад</option>
-                    <option value="cash">Наличные</option>
-                    <option value="crypto">Крипто</option>
+                    <option value="debit">{t.typeDebit}</option>
+                    <option value="credit">{t.typeCredit}</option>
+                    <option value="savings">{t.typeSavings}</option>
+                    <option value="cash">{t.typeCash}</option>
+                    <option value="crypto">{t.typeCrypto}</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Валюта</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.currencyLabel}</label>
                   <select
                     value={newAccCurrency}
                     onChange={(e) => setNewAccCurrency(e.target.value as CurrencyCode)}
@@ -319,7 +317,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Начальный баланс</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.balanceLabel}</label>
                   <input
                     type="number"
                     step="any"
@@ -333,19 +331,22 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Фирменный цвет</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.colorLabel}</label>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                  {['#00e699', '#ffdd2d', '#22c55e', '#38bdf8', '#a855f7', '#ff3b5c', '#f97316'].map((color) => (
-                    <div
-                      key={color}
-                      onClick={() => setNewAccColor(color)}
+                  {['#ffdd2d', '#22c55e', '#00e699', '#38bdf8', '#a855f7', '#ec4899', '#f97316'].map((col) => (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => setNewAccColor(col)}
                       style={{
                         width: '28px',
                         height: '28px',
                         borderRadius: '50%',
-                        backgroundColor: color,
+                        background: col,
+                        border: newAccColor === col ? '2px solid #fff' : '2px solid transparent',
                         cursor: 'pointer',
-                        border: newAccColor === color ? '3px solid #fff' : '2px solid transparent',
+                        transform: newAccColor === col ? 'scale(1.15)' : 'scale(1)',
+                        transition: 'all 0.15s ease',
                       }}
                     />
                   ))}
@@ -354,10 +355,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
                 <button type="button" className="cat-pill" onClick={() => setShowAddModal(false)} style={{ flex: 1 }}>
-                  Отмена
+                  {t.cancelBtn}
                 </button>
                 <button type="submit" className="btn-primary" style={{ flex: 2 }}>
-                  Создать счёт
+                  {t.saveBtn}
                 </button>
               </div>
             </form>
@@ -369,10 +370,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
       {showTransferModal && (
         <div className="modal-overlay" onClick={() => setShowTransferModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>Перевод между своими счетами</h2>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>{t.transferModalTitle}</h2>
             <form onSubmit={handleTransferSubmit} style={{ display: 'flex', flexFlow: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Списать со счёта</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.fromAccount}</label>
                 <select
                   value={transferFromId}
                   onChange={(e) => setTransferFromId(e.target.value)}
@@ -387,7 +388,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Зачислить на счёт</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.toAccount}</label>
                 <select
                   value={transferToId}
                   onChange={(e) => setTransferToId(e.target.value)}
@@ -402,7 +403,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Сумма списания</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.transferAmount}</label>
                 <input
                   type="number"
                   step="any"
@@ -424,12 +425,12 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Сумма зачисления (по курсу конвертации)
+                  {t.transferTargetAmount}
                 </label>
                 <input
                   type="number"
                   step="any"
-                  placeholder="Рассчитается автоматически или введите вручную"
+                  placeholder={t.autoCalculated}
                   value={transferTargetAmount}
                   onChange={(e) => setTransferTargetAmount(e.target.value)}
                   style={{ width: '100%', marginTop: '4px' }}
@@ -438,10 +439,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
                 <button type="button" className="cat-pill" onClick={() => setShowTransferModal(false)} style={{ flex: 1 }}>
-                  Отмена
+                  {t.cancelBtn}
                 </button>
                 <button type="submit" className="btn-primary" style={{ flex: 2 }}>
-                  Выполнить перевод
+                  {t.executeTransferBtn}
                 </button>
               </div>
             </form>
@@ -453,14 +454,14 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
       {showEditModal && editingAccount && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>Редактировать счёт</h2>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 800 }}>{t.editAccountTitle}</h2>
             <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexFlow: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Название счёта / карты</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.accountNameLabel}</label>
                 <input
                   type="text"
                   required
-                  placeholder="например, Т-Банк Black или Наличные USD"
+                  placeholder={t.accountNamePlaceholder}
                   value={editAccName}
                   onChange={(e) => setEditAccName(e.target.value)}
                   style={{ width: '100%', marginTop: '4px' }}
@@ -469,35 +470,35 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Банк / Организация</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.bankLabel}</label>
                   <input
                     type="text"
                     value={editAccBank}
                     onChange={(e) => setEditAccBank(e.target.value)}
-                    placeholder="Т-Банк, Сбер и т.д."
+                    placeholder={t.bankPlaceholder}
                     style={{ width: '100%', marginTop: '4px' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Тип счёта</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.accountTypeLabel}</label>
                   <select
                     value={editAccType}
                     onChange={(e) => setEditAccType(e.target.value as AccountType)}
                     style={{ width: '100%', marginTop: '4px' }}
                   >
-                    <option value="debit">Дебетовая карта</option>
-                    <option value="credit">Кредитная карта</option>
-                    <option value="savings">Накопительный счёт</option>
-                    <option value="cash">Наличные</option>
-                    <option value="crypto">Крипто-кошелёк</option>
+                    <option value="debit">{t.typeDebit}</option>
+                    <option value="credit">{t.typeCredit}</option>
+                    <option value="savings">{t.typeSavings}</option>
+                    <option value="cash">{t.typeCash}</option>
+                    <option value="crypto">{t.typeCrypto}</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Валюта счёта</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.currencyLabel}</label>
                   <select
                     value={editAccCurrency}
                     onChange={(e) => setEditAccCurrency(e.target.value as CurrencyCode)}
@@ -513,7 +514,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Текущий баланс</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.balanceLabel}</label>
                   <input
                     type="number"
                     step="any"
@@ -527,7 +528,7 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Цвет карты</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t.colorLabel}</label>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                   {['#ffdd2d', '#22c55e', '#00e699', '#38bdf8', '#a855f7', '#ec4899', '#f97316'].map((col) => (
                     <button
@@ -551,10 +552,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
                 <button type="button" className="cat-pill" onClick={() => setShowEditModal(false)} style={{ flex: 1 }}>
-                  Отмена
+                  {t.cancelBtn}
                 </button>
                 <button type="submit" className="btn-primary" style={{ flex: 2 }}>
-                  Сохранить
+                  {t.saveBtn}
                 </button>
               </div>
             </form>

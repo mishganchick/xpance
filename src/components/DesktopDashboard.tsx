@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Account, Category, CurrencyCode, RationalityTag, Transaction, UserGamification } from '../types/finance';
 import { convertCurrency, formatMoney } from '../services/currencyService';
 import { Shield, Sparkles, AlertTriangle, Search, Trash2, Trophy, ArrowRight } from 'lucide-react';
+import { Language, getTranslation } from '../services/i18n';
 
 interface DesktopDashboardProps {
   transactions: Transaction[];
@@ -12,6 +13,7 @@ interface DesktopDashboardProps {
   onDeleteTransaction: (id: string) => void;
   onOpenAchievements: () => void;
   hideGamificationWidget?: boolean;
+  lang?: Language;
 }
 
 export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
@@ -23,7 +25,9 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
   onDeleteTransaction,
   onOpenAchievements,
   hideGamificationWidget = false,
+  lang = 'ru',
 }) => {
+  const t = getTranslation(lang);
   const [filterTag, setFilterTag] = useState<RationalityTag | 'all' | 'income'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -69,18 +73,18 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
         <div className="glass-card" style={{ padding: '18px', marginBottom: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Радар разумности трат</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{t.impulseRadarTitle}</h3>
               <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Распределение расходов по осознанности
+                {impulsePercent > 25 ? t.alertImpulseMsg : t.healthyBudgetMsg}
               </p>
             </div>
             {impulsePercent > 20 ? (
               <span style={{ fontSize: '11px', color: 'var(--accent-ruby)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 800 }}>
-                <AlertTriangle size={13} /> Всплеск импульсов!
+                <AlertTriangle size={13} /> {lang === 'ru' ? 'Всплеск импульсов!' : 'Impulse Spike!'}
               </span>
             ) : (
               <span style={{ fontSize: '11px', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 800 }}>
-                <Shield size={13} /> Отличный контроль
+                <Shield size={13} /> {lang === 'ru' ? 'Отличный контроль' : 'Well Controlled'}
               </span>
             )}
           </div>
@@ -96,9 +100,9 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
               marginBottom: '14px',
             }}
           >
-            <div style={{ width: `${basePercent}%`, background: '#10b981' }} title={`Базовые: ${basePercent}%`} />
-            <div style={{ width: `${joyPercent}%`, background: '#ffb703' }} title={`В радость: ${joyPercent}%`} />
-            <div style={{ width: `${impulsePercent}%`, background: '#ff3b5c' }} title={`Импульсивные: ${impulsePercent}%`} />
+            <div style={{ width: `${basePercent}%`, background: '#10b981' }} title={`${t.baseCardTitle}: ${basePercent}%`} />
+            <div style={{ width: `${joyPercent}%`, background: '#ffb703' }} title={`${t.joyCardTitle}: ${joyPercent}%`} />
+            <div style={{ width: `${impulsePercent}%`, background: '#ff3b5c' }} title={`${t.impulseCardTitle}: ${impulsePercent}%`} />
           </div>
 
           {/* Responsive Stats Cards */}
@@ -106,7 +110,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
             <div className="radar-stat-card base">
               <div className="radar-stat-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
-                  <Shield size={13} /> Base (Обязательное)
+                  <Shield size={13} /> {t.baseCardTitle}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{basePercent}%</div>
               </div>
@@ -118,7 +122,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
             <div className="radar-stat-card joy">
               <div className="radar-stat-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#ffb703', fontWeight: 700 }}>
-                  <Sparkles size={13} /> Joy (В радость)
+                  <Sparkles size={13} /> {t.joyCardTitle}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{joyPercent}%</div>
               </div>
@@ -130,7 +134,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
             <div className="radar-stat-card impulse">
               <div className="radar-stat-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#ff3b5c', fontWeight: 700 }}>
-                  <AlertTriangle size={13} /> Impulse (Неразумно)
+                  <AlertTriangle size={13} /> {t.impulseCardTitle}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{impulsePercent}%</div>
               </div>
@@ -144,7 +148,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
         {/* Transactions Ledger */}
         <div className="glass-card" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Журнал операций</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{t.transactionsLedger}</h3>
 
             {/* Filter Pills */}
             <div className="ledger-filters-row">
@@ -152,28 +156,28 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                 className={`cat-pill ${filterTag === 'all' ? 'active' : ''}`}
                 onClick={() => setFilterTag('all')}
               >
-                Все
+                {t.allFilter}
               </button>
               <button
                 className={`cat-pill ${filterTag === 'impulse' ? 'active' : ''}`}
                 onClick={() => setFilterTag('impulse')}
                 style={{ color: '#ff3b5c' }}
               >
-                ⚠️ Импульсы
+                {t.tagImpulseTitle}
               </button>
               <button
                 className={`cat-pill ${filterTag === 'joy' ? 'active' : ''}`}
                 onClick={() => setFilterTag('joy')}
                 style={{ color: '#ffb703' }}
               >
-                ✨ Радость
+                {t.tagJoyTitle}
               </button>
               <button
                 className={`cat-pill ${filterTag === 'income' ? 'active' : ''}`}
                 onClick={() => setFilterTag('income')}
                 style={{ color: '#10b981' }}
               >
-                + Доходы
+                + {t.income}
               </button>
             </div>
           </div>
@@ -183,7 +187,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
             <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Поиск по заметке, категории или банку..."
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ width: '100%', paddingLeft: '34px', fontSize: '12px' }}
@@ -194,7 +198,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '440px', overflowY: 'auto' }}>
             {filteredTransactions.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                Операции не найдены
+                {t.noTransactionsFound}
               </div>
             ) : (
               filteredTransactions.map((tx) => {
@@ -206,11 +210,11 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                 let tagBadge = null;
                 if (isExpense) {
                   if (tx.rationalityTag === 'impulse') {
-                    tagBadge = <span style={{ fontSize: '9px', color: '#ff3b5c', background: 'rgba(255, 59, 92, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>⚠️ Импульс</span>;
+                    tagBadge = <span style={{ fontSize: '9px', color: '#ff3b5c', background: 'rgba(255, 59, 92, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagImpulseTitle}</span>;
                   } else if (tx.rationalityTag === 'joy') {
-                    tagBadge = <span style={{ fontSize: '9px', color: '#ffb703', background: 'rgba(255, 183, 3, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>✨ В радость</span>;
+                    tagBadge = <span style={{ fontSize: '9px', color: '#ffb703', background: 'rgba(255, 183, 3, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagJoyTitle}</span>;
                   } else {
-                    tagBadge = <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>🌿 База</span>;
+                    tagBadge = <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagBaseTitle}</span>;
                   }
                 }
 
@@ -248,12 +252,12 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {cat?.name || 'Перевод'}
+                            {cat?.name || (lang === 'ru' ? 'Перевод' : 'Transfer')}
                           </span>
                           {tagBadge}
                         </div>
                         <div style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {acc?.name} • {new Date(tx.date).toLocaleDateString('ru-RU')}
+                          {acc?.name} • {new Date(tx.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US')}
                           {tx.note && ` • ${tx.note}`}
                         </div>
                       </div>
@@ -275,7 +279,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                       <button
                         onClick={() => onDeleteTransaction(tx.id)}
                         style={{ color: 'var(--text-muted)', padding: '4px' }}
-                        title="Удалить"
+                        title={t.deleteTxConfirm}
                       >
                         <Trash2 size={13} />
                       </button>
@@ -293,13 +297,13 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
         <div className="dashboard-sidebar">
           <div className="glass-card" style={{ padding: '20px', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Финансовый Герой</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{lang === 'ru' ? 'Финансовый Герой' : 'Financial Hero'}</h3>
               <button
                 className="cat-pill"
                 onClick={onOpenAchievements}
                 style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--accent-joy)' }}
               >
-                <span>Все трофеи</span>
+                <span>{t.allTrophies}</span>
                 <ArrowRight size={12} />
               </button>
             </div>
@@ -320,9 +324,11 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
               >
                 <Trophy size={28} color="#150f02" />
               </div>
-              <div style={{ fontSize: '16px', fontWeight: 900 }}>{gamification.levelTitle}</div>
+              <div style={{ fontSize: '16px', fontWeight: 900 }}>
+                {gamification.level >= 10 ? t.financialSageRank : (gamification.levelTitle || t.noviceRank)}
+              </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Уровень {gamification.level} • {gamification.xp} XP
+                {t.level} {gamification.level} • {gamification.xp} XP
               </div>
             </div>
 
@@ -338,10 +344,10 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
               }}
             >
               <div style={{ fontSize: '11px', color: 'var(--accent-joy)', fontWeight: 700 }}>
-                Стрик осознанности
+                {lang === 'ru' ? 'Стрик осознанности' : 'Mindful Streak'}
               </div>
               <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--accent-joy)' }}>
-                🔥 {gamification.currentStreakDays} дн.
+                🔥 {gamification.currentStreakDays} {t.streakDays}
               </div>
             </div>
           </div>

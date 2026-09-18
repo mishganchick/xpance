@@ -13,6 +13,7 @@ import { GoogleDriveSyncModal } from './components/GoogleDriveSyncModal';
 import { AchievementToast } from './components/AchievementToast';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { Trash2 } from 'lucide-react';
+import { Language, getTranslation, getLocalizedLevelTitle } from './services/i18n';
 
 export const App: React.FC = () => {
   const [vault, setVault] = useState<AppDataVault>(() => loadVaultFromStorage());
@@ -23,6 +24,19 @@ export const App: React.FC = () => {
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  // i18n language state (stored in localStorage)
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('xpance_lang');
+    return (saved === 'en' || saved === 'ru') ? saved : 'ru';
+  });
+
+  const t = getTranslation(lang);
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('xpance_lang', newLang);
+  };
 
   // Auto-detect screen size and PWA install prompt
   useEffect(() => {
@@ -237,7 +251,7 @@ export const App: React.FC = () => {
         primaryCurrency={vault.primaryCurrency}
         onCurrencyChange={handleCurrencyChange}
         level={vault.gamification.level}
-        levelTitle={vault.gamification.levelTitle}
+        levelTitle={getLocalizedLevelTitle(vault.gamification.level, lang)}
         streakDays={vault.gamification.currentStreakDays}
         onOpenAchievements={() => {
           if (isMobile) {
@@ -250,6 +264,8 @@ export const App: React.FC = () => {
         isSyncConfigured={vault.syncConfig.isSignedIn || Boolean(vault.syncConfig.clientId)}
         viewMode={viewMode}
         onToggleViewMode={setViewMode}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
       />
 
       {isMobile ? (
@@ -262,17 +278,18 @@ export const App: React.FC = () => {
                 accounts={vault.accounts}
                 categories={vault.categories}
                 onAddTransaction={handleAddTransaction}
+                lang={lang}
               />
 
               {/* Recent Transactions List on Mobile Input Screen */}
               <div className="glass-card" style={{ padding: '16px', marginTop: '16px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '10px', letterSpacing: '0.5px' }}>
-                  Последние операции
+                  {t.recentTransactions}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {vault.transactions.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '18px 10px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                      🌱 База данных пустая. Внесите свой первый расход или доход выше!
+                      {t.emptyDbPrompt}
                     </div>
                   ) : (
                     vault.transactions.slice(0, 4).map((tx) => {
@@ -284,11 +301,11 @@ export const App: React.FC = () => {
                     let tagBadge = null;
                     if (isExpense) {
                       if (tx.rationalityTag === 'impulse') {
-                        tagBadge = <span style={{ fontSize: '9px', color: '#ff3b5c', background: 'rgba(255, 59, 92, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>⚠️ Импульс</span>;
+                        tagBadge = <span style={{ fontSize: '9px', color: '#ff3b5c', background: 'rgba(255, 59, 92, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagImpulseTitle}</span>;
                       } else if (tx.rationalityTag === 'joy') {
-                        tagBadge = <span style={{ fontSize: '9px', color: '#ffb703', background: 'rgba(255, 183, 3, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>✨ В радость</span>;
+                        tagBadge = <span style={{ fontSize: '9px', color: '#ffb703', background: 'rgba(255, 183, 3, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagJoyTitle}</span>;
                       } else {
-                        tagBadge = <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>🌿 База</span>;
+                        tagBadge = <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>{t.tagBaseTitle}</span>;
                       }
                     }
 
@@ -307,11 +324,11 @@ export const App: React.FC = () => {
                       >
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>{cat?.name || 'Перевод'}</span>
+                            <span>{cat?.name || (lang === 'ru' ? 'Перевод' : 'Transfer')}</span>
                             {tagBadge}
                           </div>
                           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                            {acc?.name} • {new Date(tx.date).toLocaleDateString('ru-RU')}
+                            {acc?.name} • {new Date(tx.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US')}
                           </div>
                         </div>
 
@@ -329,6 +346,7 @@ export const App: React.FC = () => {
                           <button
                             onClick={() => handleDeleteTransaction(tx.id)}
                             style={{ color: 'var(--text-muted)', padding: '4px' }}
+                            title={t.deleteTxConfirm}
                           >
                             <Trash2 size={13} />
                           </button>
@@ -350,6 +368,7 @@ export const App: React.FC = () => {
               onUpdateAccount={handleUpdateAccount}
               onDeleteAccount={handleDeleteAccount}
               onTransfer={handleTransfer}
+              lang={lang}
             />
           )}
 
@@ -364,6 +383,7 @@ export const App: React.FC = () => {
               onDeleteTransaction={handleDeleteTransaction}
               onOpenAchievements={() => setActiveMobileTab('achievements')}
               hideGamificationWidget={true}
+              lang={lang}
             />
           )}
 
@@ -372,6 +392,7 @@ export const App: React.FC = () => {
             <AchievementsView
               achievements={vault.achievements}
               gamification={vault.gamification}
+              lang={lang}
             />
           )}
 
@@ -380,6 +401,7 @@ export const App: React.FC = () => {
             activeTab={activeMobileTab}
             onTabChange={setActiveMobileTab}
             streakDays={vault.gamification.currentStreakDays}
+            lang={lang}
           />
         </main>
       ) : (
@@ -392,12 +414,14 @@ export const App: React.FC = () => {
             onUpdateAccount={handleUpdateAccount}
             onDeleteAccount={handleDeleteAccount}
             onTransfer={handleTransfer}
+            lang={lang}
           />
 
           <QuickExpenseInput
             accounts={vault.accounts}
             categories={vault.categories}
             onAddTransaction={handleAddTransaction}
+            lang={lang}
           />
 
           <DesktopDashboard
@@ -408,6 +432,7 @@ export const App: React.FC = () => {
             gamification={vault.gamification}
             onDeleteTransaction={handleDeleteTransaction}
             onOpenAchievements={() => setIsAchievementsOpen(true)}
+            lang={lang}
           />
         </main>
       )}
@@ -418,6 +443,7 @@ export const App: React.FC = () => {
         onClose={() => setIsAchievementsOpen(false)}
         achievements={vault.achievements}
         gamification={vault.gamification}
+        lang={lang}
       />
 
       <GoogleDriveSyncModal
@@ -428,6 +454,7 @@ export const App: React.FC = () => {
         onClearDatabase={handleClearDatabase}
         onLoadDemo={handleLoadDemo}
         onResetToDemo={handleClearDatabase}
+        lang={lang}
       />
 
       <AchievementToast
