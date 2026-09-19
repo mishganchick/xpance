@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppDataVault } from '../types/finance';
 import { downloadBackupFile, uploadBackupFile, driveSync } from '../services/googleDriveSync';
-import { Cloud, Download, Upload, Check, X, ShieldCheck, RefreshCw, Key, Trash2 } from 'lucide-react';
+import { Cloud, Download, Upload, Check, X, ShieldCheck, RefreshCw, Key, Trash2, ExternalLink, HelpCircle, Copy } from 'lucide-react';
 import { Language, getTranslation } from '../services/i18n';
 
 interface GoogleDriveSyncModalProps {
@@ -29,6 +29,17 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
   const [clientId, setClientId] = useState(vault.syncConfig.clientId || '');
   const [statusMessage, setStatusMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [copiedOrigin, setCopiedOrigin] = useState(false);
+
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+
+  const handleCopyOrigin = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(currentOrigin);
+      setCopiedOrigin(true);
+      setTimeout(() => setCopiedOrigin(false), 2000);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -172,30 +183,132 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
 
         {/* SECTION 2: Direct Google Drive API OAuth */}
         <div style={{ marginBottom: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-          <h4 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Key size={14} />
-            <span>{t.sectionOAuth}</span>
-          </h4>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <Key size={14} />
+              <span>{t.sectionOAuth}</span>
+            </h4>
+            <a
+              href="https://console.cloud.google.com/apis/credentials"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cat-pill"
+              style={{
+                fontSize: '11px',
+                color: 'var(--accent-cyan)',
+                borderColor: 'rgba(0, 217, 255, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 10px',
+                textDecoration: 'none',
+                fontWeight: 700,
+              }}
+            >
+              <ExternalLink size={12} />
+              <span>{t.openGoogleConsoleBtn}</span>
+            </a>
+          </div>
+
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: '1.4' }}>
             {t.oauthDesc}
           </p>
-          <input
-            type="text"
-            placeholder={lang === 'ru' ? 'например: 123456789-abc.apps.googleusercontent.com' : 'e.g.: 123456789-abc.apps.googleusercontent.com'}
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            style={{ width: '100%', fontSize: '12px', marginBottom: '12px' }}
-          />
-          <button
-            onClick={() => {
-              driveSync.setClientId(clientId);
-              setStatusMessage(lang === 'ru' ? 'Client ID сохранён.' : 'Client ID saved.');
+
+          {/* Quick Step-by-Step Helper Card with direct links */}
+          <div
+            style={{
+              padding: '12px 14px',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-subtle)',
+              marginBottom: '14px',
+              fontSize: '11px',
+              lineHeight: '1.6',
+              color: 'var(--text-secondary)',
             }}
-            className="cat-pill"
-            style={{ fontSize: '12px', padding: '8px 14px' }}
           >
-            {t.saveClientIdBtn}
-          </button>
+            <div style={{ fontWeight: 700, color: 'var(--accent-joy)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <HelpCircle size={13} />
+              <span>{t.oauthHelpTitle}</span>
+            </div>
+            <ol style={{ paddingLeft: '18px', margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li>
+                {t.oauthStep1}{' '}
+                <a
+                  href="https://console.cloud.google.com/apis/credentials"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--accent-cyan)', textDecoration: 'underline', fontWeight: 600 }}
+                >
+                  {t.oauthLinkConsole} ↗
+                </a>
+              </li>
+              <li>
+                {t.oauthStep2}
+              </li>
+              <li>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
+                  <span>{t.oauthStep3}</span>
+                  <code style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '2px 6px', borderRadius: '4px', color: '#00e699', fontWeight: 700 }}>
+                    {currentOrigin}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={handleCopyOrigin}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '4px',
+                      color: copiedOrigin ? '#00e699' : 'var(--text-muted)',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                    }}
+                  >
+                    {copiedOrigin ? <Check size={11} /> : <Copy size={11} />}
+                    <span>{copiedOrigin ? (lang === 'ru' ? 'Скопировано' : 'Copied') : (lang === 'ru' ? 'Скопировать' : 'Copy')}</span>
+                  </button>
+                </div>
+              </li>
+              <li>
+                {t.oauthStep4}
+              </li>
+              <li>
+                {t.oauthStep5}{' '}
+                <a
+                  href="https://console.cloud.google.com/apis/library/drive.googleapis.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--accent-cyan)', textDecoration: 'underline', fontWeight: 600 }}
+                >
+                  {t.oauthLinkDriveApi} ↗
+                </a>
+              </li>
+            </ol>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder={lang === 'ru' ? 'например: 123456789-abc.apps.googleusercontent.com' : 'e.g.: 123456789-abc.apps.googleusercontent.com'}
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              style={{ flex: 1, fontSize: '12px' }}
+            />
+            <button
+              onClick={() => {
+                driveSync.setClientId(clientId);
+                setStatusMessage(lang === 'ru' ? 'Client ID успешно сохранён.' : 'Client ID saved successfully.');
+              }}
+              className="cat-pill"
+              style={{ fontSize: '12px', padding: '10px 16px', whiteSpace: 'nowrap' }}
+            >
+              {t.saveClientIdBtn}
+            </button>
+          </div>
         </div>
 
         {/* SECTION 3: Database Management */}

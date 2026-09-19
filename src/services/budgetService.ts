@@ -59,7 +59,7 @@ export function getPresetDaysDates(days: number): { startDate: string; endDate: 
 }
 
 /**
- * Расчет всех метрик бюджета в стиле «Тяжеловато» (tzlvt)
+ * Расчет метрик динамического бюджета (дневной лимит с автоматическим переносом остатка)
  */
 export function calculateBudgetMetrics(
   budget: PeriodBudget,
