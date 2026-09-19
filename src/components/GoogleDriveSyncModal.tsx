@@ -35,16 +35,13 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
-  const phoneNetworkUrl = 'http://192.168.1.21:5173/';
+  const publicLiveUrl = 'https://mishganchick.github.io/xpance/';
+  const localNetworkUrl = 'http://192.168.1.21:5173/';
 
   useEffect(() => {
     if (isOpen) {
-      // Generate QR code for phone access
-      const urlToEncode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? phoneNetworkUrl
-        : window.location.href;
-
-      QRCode.toDataURL(urlToEncode, {
+      // Generate QR code for phone access (use public HTTPS live site for full PWA and LTE support)
+      QRCode.toDataURL(publicLiveUrl, {
         width: 170,
         margin: 1,
         color: {
@@ -69,7 +66,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
 
   const handleCopyPhoneUrl = () => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(phoneNetworkUrl);
+      navigator.clipboard.writeText(publicLiveUrl);
       setCopiedPhoneUrl(true);
       setTimeout(() => setCopiedPhoneUrl(false), 2000);
     }
@@ -220,19 +217,36 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.4' }}>
                 {lang === 'ru' ? (
                   <>
-                    Наведите <strong>камеру смартфона</strong> на QR-код (когда телефон подключен к тому же домашнему Wi-Fi), чтобы мгновенно открыть XPance.
+                    Наведите <strong>камеру смартфона</strong> на QR-код, чтобы открыть официальную веб-версию XPance на телефоне (работает через любой Wi-Fi или мобильный интернет).
                   </>
                 ) : (
                   <>
-                    Point your <strong>smartphone camera</strong> at the QR code (while on same Wi-Fi) to open XPance immediately.
+                    Point your <strong>smartphone camera</strong> at the QR code to open XPance on your phone (works on any Wi-Fi or mobile data).
                   </>
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <code style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', color: '#00e699', fontWeight: 700 }}>
-                  {phoneNetworkUrl}
-                </code>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <a
+                  href={publicLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    color: '#00e699',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>{publicLiveUrl}</span>
+                  <ExternalLink size={10} />
+                </a>
                 <button
                   type="button"
                   onClick={handleCopyPhoneUrl}
@@ -246,6 +260,11 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
                   {copiedPhoneUrl ? <Check size={11} /> : <Copy size={11} />}
                   <span>{copiedPhoneUrl ? (lang === 'ru' ? 'Скопировано' : 'Copied') : (lang === 'ru' ? 'Копировать' : 'Copy')}</span>
                 </button>
+              </div>
+
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                {lang === 'ru' ? 'Локальный dev-сервер: ' : 'Local dev server: '}
+                <code>{localNetworkUrl}</code>
               </div>
             </div>
           </div>
