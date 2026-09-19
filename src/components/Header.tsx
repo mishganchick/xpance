@@ -15,6 +15,7 @@ interface HeaderProps {
   streakDays: number;
   onOpenAchievements: () => void;
   onOpenSync: () => void;
+  onOpenWidget?: () => void;
   isSyncConfigured: boolean;
   syncStatus?: 'idle' | 'syncing' | 'synced' | 'error';
   viewMode: 'desktop' | 'mobile';
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   streakDays,
   onOpenAchievements,
   onOpenSync,
+  onOpenWidget,
   isSyncConfigured,
   syncStatus = 'idle',
   viewMode,
@@ -174,6 +176,23 @@ export const Header: React.FC<HeaderProps> = ({
               : (lang === 'en' ? 'Backup' : 'Бэкап')}
           </span>
         </button>
+
+        {/* Phone Widget Pill */}
+        {onOpenWidget && (
+          <button
+            className="currency-badge"
+            onClick={onOpenWidget}
+            title={lang === 'ru' ? 'Виджет для телефона' : 'Phone Widget'}
+            style={{
+              background: 'rgba(123, 97, 255, 0.08)',
+              borderColor: 'rgba(123, 97, 255, 0.35)',
+              color: '#c4b5fd',
+            }}
+          >
+            <Smartphone size={13} color="#a78bfa" />
+            <span>{lang === 'ru' ? 'Виджет' : 'Widget'}</span>
+          </button>
+        )}
 
         {/* Gamification Trophy Badge */}
         <div className="gamification-badge" onClick={onOpenAchievements} title={t.achievementsTooltip}>

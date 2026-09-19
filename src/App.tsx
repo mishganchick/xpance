@@ -12,6 +12,7 @@ import { DesktopDashboard } from './components/DesktopDashboard';
 import { AchievementsView } from './components/AchievementsView';
 import { AchievementsModal } from './components/AchievementsModal';
 import { GoogleDriveSyncModal } from './components/GoogleDriveSyncModal';
+import { PhoneWidgetModal } from './components/PhoneWidgetModal';
 import { AchievementToast } from './components/AchievementToast';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { Trash2 } from 'lucide-react';
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [isMobileScreen, setIsMobileScreen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 768 : false));
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
@@ -65,6 +67,26 @@ export const App: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     };
+  }, []);
+
+  // Handle PWA shortcut actions from homescreen icon (e.g. ?action=add_expense)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    if (action === 'add_expense') {
+      setActiveMobileTab('input');
+      setTimeout(() => {
+        const inputEl = document.querySelector('.amount-input') as HTMLInputElement;
+        if (inputEl) inputEl.focus();
+      }, 350);
+    } else if (action === 'view_budget' || action === 'budget') {
+      setIsBudgetModalOpen(true);
+    } else if (action === 'achievements') {
+      setIsAchievementsOpen(true);
+    } else if (action === 'widget') {
+      setIsWidgetModalOpen(true);
+    }
   }, []);
 
   const handleInstallClick = async () => {
@@ -456,6 +478,7 @@ export const App: React.FC = () => {
           }
         }}
         onOpenSync={() => setIsSyncModalOpen(true)}
+        onOpenWidget={() => setIsWidgetModalOpen(true)}
         isSyncConfigured={driveSync.isAuthorized() || Boolean(vault.syncConfig?.clientId)}
         syncStatus={syncStatus}
         viewMode={viewMode}
@@ -687,6 +710,15 @@ export const App: React.FC = () => {
         onSaveBudget={handleSaveBudget}
         onTopUpBudget={handleTopUpBudget}
         onDeleteBudget={handleDeleteBudget}
+      />
+
+      {/* Phone Homescreen Widget Modal */}
+      <PhoneWidgetModal
+        isOpen={isWidgetModalOpen}
+        onClose={() => setIsWidgetModalOpen(false)}
+        budget={vault.budget}
+        transactions={vault.transactions}
+        lang={lang}
       />
     </div>
   );

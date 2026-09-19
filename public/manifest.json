@@ -34,5 +34,28 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Внести расход",
+      "short_name": "Расход",
+      "description": "Быстро записать новую трату",
+      "url": "./?action=add_expense",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Дневной бюджет",
+      "short_name": "Бюджет",
+      "description": "Посмотреть остаток на день",
+      "url": "./?action=view_budget",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Зал ачивок",
+      "short_name": "Ачивки",
+      "description": "Текущий уровень и трофеи",
+      "url": "./?action=achievements",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
