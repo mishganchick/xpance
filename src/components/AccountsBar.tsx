@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Account, AccountType, CurrencyCode } from '../types/finance';
-import { CURRENCIES, convertCurrency, formatMoney } from '../services/currencyService';
+import { CURRENCIES, convertCurrency, formatMoney, isCryptoAsset, formatUsdtEquivalent } from '../services/currencyService';
 import { Plus, ArrowRightLeft, CreditCard, Banknote, PiggyBank, Globe, Edit2, Trash2 } from 'lucide-react';
 import { Language, getTranslation } from '../services/i18n';
 
@@ -233,10 +233,23 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                 <div className="account-balance">
                   {formatMoney(acc.balance, acc.currency)}
                 </div>
-                {convertedBalance !== null && (
-                  <div className="account-sub">
-                    ≈ {formatMoney(convertedBalance, primaryCurrency)}
+                {isCryptoAsset(acc.currency) ? (
+                  <div className="account-sub" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--accent-joy)', fontWeight: 800 }}>
+                      {formatUsdtEquivalent(acc.balance, acc.currency)}
+                    </span>
+                    {primaryCurrency !== 'USDT' && convertedBalance !== null && (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                        (≈ {formatMoney(convertedBalance, primaryCurrency)})
+                      </span>
+                    )}
                   </div>
+                ) : (
+                  convertedBalance !== null && (
+                    <div className="account-sub">
+                      ≈ {formatMoney(convertedBalance, primaryCurrency)}
+                    </div>
+                  )
                 )}
                 {acc.type === 'savings' && acc.interestRate && (
                   <div className="account-sub" style={{ color: 'var(--accent-joy)' }}>
@@ -312,6 +325,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="USDT">USDT (₮)</option>
+                    <option value="BTC">BTC (₿)</option>
+                    <option value="ETH">ETH (Ξ)</option>
+                    <option value="TON">TON (💎)</option>
+                    <option value="SOL">SOL (◎)</option>
                     <option value="KZT">KZT (₸)</option>
                     <option value="GEL">GEL (₾)</option>
                   </select>
@@ -508,6 +525,10 @@ export const AccountsBar: React.FC<AccountsBarProps> = ({
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="USDT">USDT (₮)</option>
+                    <option value="BTC">BTC (₿)</option>
+                    <option value="ETH">ETH (Ξ)</option>
+                    <option value="TON">TON (💎)</option>
+                    <option value="SOL">SOL (◎)</option>
                     <option value="KZT">KZT (₸)</option>
                     <option value="GEL">GEL (₾)</option>
                   </select>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Account, AppDataVault, CurrencyCode, Transaction, Achievement } from './types/finance';
+import { Account, AppDataVault, CurrencyCode, Transaction, Achievement, PeriodBudget } from './types/finance';
 import { loadVaultFromStorage, saveVaultToStorage, getInitialVault, clearVaultStorage, getDemoVault } from './services/storage';
 import { calculateNetWorth, formatMoney } from './services/currencyService';
 import { evaluateGamification } from './achievements/achievementEngine';
 import { Header } from './components/Header';
 import { AccountsBar } from './components/AccountsBar';
+import { BudgetTzlvtCard } from './components/BudgetTzlvtCard';
+import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseInput } from './components/QuickExpenseInput';
 import { DesktopDashboard } from './components/DesktopDashboard';
 import { AchievementsView } from './components/AchievementsView';
@@ -24,6 +26,10 @@ export const App: React.FC = () => {
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  // Period Budget Modal State
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [budgetModalMode, setBudgetModalMode] = useState<'configure' | 'topup'>('configure');
 
   // i18n language state (stored in localStorage)
   const [lang, setLang] = useState<Language>(() => {
@@ -240,6 +246,53 @@ export const App: React.FC = () => {
     updateVault(newVault, false);
   };
 
+  // Save or Update Period Budget
+  const handleSaveBudget = (newBudget: PeriodBudget) => {
+    const newVault: AppDataVault = {
+      ...vault,
+      budget: newBudget,
+    };
+    updateVault(newVault);
+  };
+
+  // Top Up Period Budget
+  const handleTopUpBudget = (amount: number, note?: string) => {
+    if (!vault.budget) return;
+    const topUp = {
+      id: `topup_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      amount,
+      date: new Date().toISOString(),
+      note,
+    };
+    const currentTopUps = vault.budget.topUps || [];
+    const updatedBudget: PeriodBudget = {
+      ...vault.budget,
+      topUps: [...currentTopUps, topUp],
+    };
+    const newVault: AppDataVault = {
+      ...vault,
+      budget: updatedBudget,
+    };
+    updateVault(newVault);
+  };
+
+  // Delete Period Budget
+  const handleDeleteBudget = () => {
+    const newVault: AppDataVault = { ...vault };
+    delete newVault.budget;
+    updateVault(newVault);
+  };
+
+  const handleOpenConfigureBudget = () => {
+    setBudgetModalMode('configure');
+    setIsBudgetModalOpen(true);
+  };
+
+  const handleOpenTopUpBudget = () => {
+    setBudgetModalMode('topup');
+    setIsBudgetModalOpen(true);
+  };
+
   // Calculate Net Worth
   const netWorth = calculateNetWorth(vault.accounts, vault.primaryCurrency);
   const isMobile = isMobileScreen || viewMode === 'mobile';
@@ -274,6 +327,15 @@ export const App: React.FC = () => {
           {/* TAB 1: QUICK INPUT */}
           {activeMobileTab === 'input' && (
             <>
+              <BudgetTzlvtCard
+                budget={vault.budget}
+                transactions={vault.transactions}
+                primaryCurrency={vault.primaryCurrency}
+                lang={lang}
+                onOpenBudgetModal={handleOpenConfigureBudget}
+                onOpenTopUpModal={handleOpenTopUpBudget}
+              />
+
               <QuickExpenseInput
                 accounts={vault.accounts}
                 categories={vault.categories}
@@ -417,6 +479,15 @@ export const App: React.FC = () => {
             lang={lang}
           />
 
+          <BudgetTzlvtCard
+            budget={vault.budget}
+            transactions={vault.transactions}
+            primaryCurrency={vault.primaryCurrency}
+            lang={lang}
+            onOpenBudgetModal={handleOpenConfigureBudget}
+            onOpenTopUpModal={handleOpenTopUpBudget}
+          />
+
           <QuickExpenseInput
             accounts={vault.accounts}
             categories={vault.categories}
@@ -460,6 +531,19 @@ export const App: React.FC = () => {
       <AchievementToast
         achievement={toastAchievement}
         onDismiss={() => setToastAchievement(null)}
+      />
+
+      {/* Tzlvt Period Budget Modal */}
+      <BudgetModal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        budget={vault.budget}
+        primaryCurrency={vault.primaryCurrency}
+        lang={lang}
+        initialMode={budgetModalMode}
+        onSaveBudget={handleSaveBudget}
+        onTopUpBudget={handleTopUpBudget}
+        onDeleteBudget={handleDeleteBudget}
       />
     </div>
   );

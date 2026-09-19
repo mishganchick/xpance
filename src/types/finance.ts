@@ -1,4 +1,4 @@
-export type CurrencyCode = 'RUB' | 'USD' | 'EUR' | 'USDT' | 'KZT' | 'GEL';
+export type CurrencyCode = 'RUB' | 'USD' | 'EUR' | 'USDT' | 'KZT' | 'GEL' | 'BTC' | 'ETH' | 'TON' | 'SOL';
 
 export interface CurrencyRate {
   code: CurrencyCode;
@@ -90,6 +90,22 @@ export interface DriveSyncConfig {
   userEmail?: string;
 }
 
+export interface BudgetTopUp {
+  id: string;
+  amount: number;
+  date: string; // ISO string
+  note?: string;
+}
+
+export interface PeriodBudget {
+  id: string;
+  totalAmount: number; // base allocated budget
+  startDate: string;   // YYYY-MM-DD
+  endDate: string;     // YYYY-MM-DD
+  currency: CurrencyCode;
+  topUps?: BudgetTopUp[];
+}
+
 export interface AppDataVault {
   version: number;
   accounts: Account[];
@@ -99,5 +115,6 @@ export interface AppDataVault {
   gamification: UserGamification;
   primaryCurrency: CurrencyCode;
   syncConfig: DriveSyncConfig;
+  budget?: PeriodBudget;
   lastUpdated: string;
 }

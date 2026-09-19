@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleViewMode,
 }) => {
   const t = getTranslation(lang);
-  const currencyList: CurrencyCode[] = ['RUB', 'USD', 'EUR', 'USDT', 'KZT', 'GEL'];
+  const currencyList: CurrencyCode[] = ['RUB', 'USD', 'EUR', 'USDT', 'BTC', 'ETH', 'TON', 'SOL', 'KZT', 'GEL'];
   const [isOnline, setIsOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   React.useEffect(() => {
