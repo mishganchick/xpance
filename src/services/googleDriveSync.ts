@@ -26,6 +26,31 @@ export function downloadBackupFile(vault: AppDataVault): void {
 }
 
 /**
+ * Отправка через системное меню «Поделиться» (Telegram, AirDrop, Файлы) или скачивание файла
+ */
+export async function shareOrDownloadBackupFile(vault: AppDataVault): Promise<boolean> {
+  const json = JSON.stringify(vault, null, 2);
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      const file = new File([json], DRIVE_FILE_NAME, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'XPance Vault',
+          text: 'Резервная копия данных XPance (счета, операции, бюджет)',
+          files: [file],
+        });
+        return true;
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') return false;
+    }
+  }
+
+  downloadBackupFile(vault);
+  return true;
+}
+
+/**
  * Загрузка файла бэкапа из Google Drive / файловой системы
  */
 export function uploadBackupFile(): Promise<AppDataVault> {
