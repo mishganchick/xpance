@@ -44,18 +44,20 @@ export const BudgetTzlvtCard: React.FC<BudgetTzlvtCardProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '220px', flex: 1 }}>
           <div
             style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #ffb703 0%, #ff8800 100%)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#0a0d12',
+              border: '1px solid rgba(123, 97, 255, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: '0 0 15px rgba(255, 183, 3, 0.3)',
+              boxShadow: '0 0 15px rgba(123, 97, 255, 0.35)',
+              overflow: 'hidden',
             }}
           >
-            <Target size={20} color="#150f02" />
+            <img src="./mascot.png" alt="Mascot" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>

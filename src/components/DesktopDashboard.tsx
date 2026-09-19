@@ -197,8 +197,13 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
           {/* Transactions List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '440px', overflowY: 'auto' }}>
             {filteredTransactions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                {t.noTransactionsFound}
+              <div style={{ textAlign: 'center', padding: '30px 16px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                <img
+                  src="./mascot.png"
+                  alt="Mascot"
+                  style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 10px', opacity: 0.85, filter: 'drop-shadow(0 0 12px rgba(123, 97, 255, 0.4))' }}
+                />
+                <div>{t.noTransactionsFound}</div>
               </div>
             ) : (
               filteredTransactions.map((tx) => {
@@ -311,18 +316,28 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
             <div style={{ textAlign: 'center', padding: '12px 0' }}>
               <div
                 style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #ffb703 0%, #ff3b5c 100%)',
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '20px',
+                  background: '#0a0d12',
+                  border: '1.5px solid rgba(123, 97, 255, 0.45)',
                   margin: '0 auto 10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 0 25px rgba(255, 183, 3, 0.35)',
+                  boxShadow: '0 0 25px rgba(123, 97, 255, 0.4)',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
                 }}
+                onClick={onOpenAchievements}
+                title={lang === 'ru' ? 'XPance Маскот' : 'XPance Mascot'}
               >
-                <Trophy size={28} color="#150f02" />
+                <img
+                  src="./mascot.png"
+                  alt="XPance Mascot"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
               </div>
               <div style={{ fontSize: '16px', fontWeight: 900 }}>
                 {gamification.level >= 10 ? t.financialSageRank : (gamification.levelTitle || t.noviceRank)}

@@ -56,7 +56,26 @@ export const Header: React.FC<HeaderProps> = ({
       {/* TOP ROW: Brand and Net Worth */}
       <div className="header-top-row">
         <div className="brand-section">
-          <div className="brand-logo" style={{ fontSize: '15px', letterSpacing: '-0.5px' }}>XP</div>
+          <div
+            className="brand-logo"
+            style={{
+              padding: 0,
+              background: '#090d14',
+              border: '1px solid rgba(123, 97, 255, 0.4)',
+              boxShadow: '0 0 15px rgba(123, 97, 255, 0.35)',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+            }}
+            onClick={onOpenAchievements}
+            title={lang === 'ru' ? 'XPance Маскот — Достижения' : 'XPance Mascot — Trophies'}
+          >
+            <img
+              src="./mascot.png"
+              alt="XPance Mascot"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          </div>
           <div>
             <div className="brand-title">XPANCE</div>
             <div className="brand-subtitle">Level Up Wealth</div>

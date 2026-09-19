@@ -47,17 +47,24 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ achievements
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #ffb703 0%, #f59e0b 100%)',
+                width: '54px',
+                height: '54px',
+                borderRadius: '16px',
+                background: '#0a0d12',
+                border: '1.5px solid rgba(123, 97, 255, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 20px rgba(255, 183, 3, 0.35)',
+                boxShadow: '0 0 25px rgba(123, 97, 255, 0.4)',
+                overflow: 'hidden',
+                flexShrink: 0,
               }}
             >
-              <Trophy size={26} color="#150f02" />
+              <img
+                src="./mascot.png"
+                alt="XPance Mascot"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
             <div>
               <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-joy)', fontWeight: 800 }}>

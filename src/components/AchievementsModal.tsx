@@ -84,12 +84,32 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-joy)', fontWeight: 800 }}>
-                {lang === 'ru' ? 'Текущий ранг' : 'Current Rank'}
-              </span>
-              <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>
-                {levelTitle}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: '#0a0d12',
+                  border: '1px solid rgba(123, 97, 255, 0.4)',
+                  boxShadow: '0 0 15px rgba(123, 97, 255, 0.35)',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src="./mascot.png"
+                  alt="XPance Mascot"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
+              <div>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-joy)', fontWeight: 800 }}>
+                  {lang === 'ru' ? 'Текущий ранг' : 'Current Rank'}
+                </span>
+                <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>
+                  {levelTitle}
+                </div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
