@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Copy, Check, ExternalLink, Sparkles, Zap, Target, Trophy, ArrowRight, Share2, PlusSquare } from 'lucide-react';
+import { X, Smartphone, Copy, Check, ExternalLink, Sparkles, Zap, Target, Trophy, ArrowRight, Share2, PlusSquare, Download, Layers } from 'lucide-react';
 import { Language } from '../services/i18n';
 import { PeriodBudget } from '../types/finance';
 import { calculateBudgetMetrics } from '../services/budgetService';
@@ -10,6 +10,8 @@ interface PhoneWidgetModalProps {
   onClose: () => void;
   budget?: PeriodBudget;
   transactions?: any[];
+  onInstallClick?: () => void;
+  hasInstallPrompt?: boolean;
   lang?: Language;
 }
 
@@ -18,17 +20,23 @@ export const PhoneWidgetModal: React.FC<PhoneWidgetModalProps> = ({
   onClose,
   budget,
   transactions = [],
+  onInstallClick,
+  hasInstallPrompt = false,
   lang = 'ru',
 }) => {
-  const [activeTab, setActiveTab] = useState<'pwa' | 'scriptable' | 'shortcuts'>('pwa');
+  // Default to Android as requested by user
+  const [platform, setPlatform] = useState<'android' | 'ios'>('android');
+  const [androidTab, setAndroidTab] = useState<'shortcuts' | 'install' | 'kwgt'>('shortcuts');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   if (!isOpen) return null;
 
   const metrics = budget ? calculateBudgetMetrics(budget, transactions) : null;
   const dailyFormatted = metrics ? formatMoney(metrics.dailyAllowanceToday, budget?.currency || 'RUB') : '2 500 ₽';
   const remainingFormatted = metrics ? formatMoney(metrics.remainingBudget, budget?.currency || 'RUB') : '45 000 ₽';
-  const daysLeft = metrics ? metrics.daysRemaining : 18;
+
+  const liveAppUrl = 'https://mishganchick.github.io/xpance/?action=add_expense';
 
   const scriptableCode = `// 🐙 XPance - iOS Homescreen Widget (Scriptable)
 // https://mishganchick.github.io/xpance/
@@ -94,32 +102,40 @@ Script.complete();`;
     }
   };
 
+  const handleCopyUrl = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(liveAppUrl);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2500);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
                 width: '38px',
                 height: '38px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7b61ff 0%, #00b4d8 100%)',
+                background: 'linear-gradient(135deg, #00e699 0%, #00b4d8 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(123, 97, 255, 0.4)',
+                boxShadow: '0 0 15px rgba(0, 230, 153, 0.35)',
               }}
             >
-              <Smartphone size={20} color="#fff" />
+              <Smartphone size={20} color="#051410" />
             </div>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 800 }}>
                 {lang === 'ru' ? 'Виджет на телефон' : 'Phone Widget'}
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {lang === 'ru' ? 'Быстрый доступ и виджет на рабочем столе iPhone / Android' : 'Homescreen widget & quick actions for iOS / Android'}
+                {lang === 'ru' ? 'Быстрый ввод трат и виджет на рабочем столе' : 'Homescreen widgets and quick expense actions'}
               </p>
             </div>
           </div>
@@ -128,32 +144,89 @@ Script.complete();`;
           </button>
         </div>
 
+        {/* Platform Switcher (Android / iOS) */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            padding: '4px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}
+        >
+          <button
+            onClick={() => setPlatform('android')}
+            style={{
+              padding: '9px',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 800,
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              background: platform === 'android' ? 'linear-gradient(135deg, #00e699 0%, #00b4d8 100%)' : 'transparent',
+              color: platform === 'android' ? '#051410' : 'var(--text-secondary)',
+              boxShadow: platform === 'android' ? '0 0 15px rgba(0, 230, 153, 0.3)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>🤖 Android</span>
+          </button>
+
+          <button
+            onClick={() => setPlatform('ios')}
+            style={{
+              padding: '9px',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 800,
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              background: platform === 'ios' ? 'linear-gradient(135deg, #7b61ff 0%, #00b4d8 100%)' : 'transparent',
+              color: platform === 'ios' ? '#fff' : 'var(--text-secondary)',
+              boxShadow: platform === 'ios' ? '0 0 15px rgba(123, 97, 255, 0.3)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>🍏 iPhone / iOS</span>
+          </button>
+        </div>
+
         {/* Realistic Widget Mockup Preview */}
         <div
           style={{
             padding: '16px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.08) 0%, rgba(0, 230, 153, 0.05) 100%)',
-            border: '1px solid rgba(123, 97, 255, 0.3)',
-            marginBottom: '18px',
+            background: 'linear-gradient(135deg, rgba(0, 230, 153, 0.08) 0%, rgba(123, 97, 255, 0.06) 100%)',
+            border: '1px solid rgba(0, 230, 153, 0.25)',
+            marginBottom: '16px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
           }}
         >
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
-            {lang === 'ru' ? 'Как выглядит виджет на экране телефона:' : 'Homescreen Widget Preview:'}
+            {lang === 'ru' ? 'Как выглядит виджет на рабочем столе:' : 'Homescreen Widget Preview:'}
           </div>
 
-          {/* Small iOS Widget Mockup */}
+          {/* Android / iOS Widget Mockup */}
           <div
             style={{
-              width: '160px',
-              height: '160px',
+              width: '168px',
+              height: '168px',
               borderRadius: '24px',
               background: 'linear-gradient(145deg, #131a26 0%, #080b10 100%)',
-              border: '1.5px solid rgba(123, 97, 255, 0.35)',
-              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(123, 97, 255, 0.25)',
+              border: '1.5px solid rgba(0, 230, 153, 0.4)',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 230, 153, 0.2)',
               padding: '14px',
               display: 'flex',
               flexDirection: 'column',
@@ -163,12 +236,12 @@ Script.complete();`;
             }}
           >
             {/* Widget Top Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div
                 style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '7px',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '8px',
                   background: '#0a0d12',
                   border: '1px solid rgba(123, 97, 255, 0.5)',
                   overflow: 'hidden',
@@ -187,7 +260,7 @@ Script.complete();`;
               <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>
                 {lang === 'ru' ? 'На день:' : 'Daily Limit:'}
               </div>
-              <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff', letterSpacing: '-0.3px', margin: '2px 0' }}>
+              <div style={{ fontSize: '19px', fontWeight: 900, color: '#fff', letterSpacing: '-0.3px', margin: '2px 0' }}>
                 {dailyFormatted}
               </div>
               <div style={{ fontSize: '9px', color: '#00e699' }}>
@@ -206,136 +279,232 @@ Script.complete();`;
                 gap: '3px',
               }}
             >
-              <span>{lang === 'ru' ? '➕ Внести расход' : '➕ Add Expense'}</span>
+              <span>{lang === 'ru' ? '➕ Внести расход ➔' : '➕ Add Expense ➔'}</span>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: '8px',
-            marginBottom: '16px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            padding: '4px',
-            borderRadius: '10px',
-          }}
-        >
-          <button
-            onClick={() => setActiveTab('pwa')}
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              fontSize: '11px',
-              fontWeight: 700,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'pwa' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'pwa' ? '#051410' : 'var(--text-secondary)',
-            }}
-          >
-            {lang === 'ru' ? '1. Иконка + Меню' : '1. App Shortcuts'}
-          </button>
-          <button
-            onClick={() => setActiveTab('scriptable')}
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              fontSize: '11px',
-              fontWeight: 700,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'scriptable' ? '#7b61ff' : 'transparent',
-              color: activeTab === 'scriptable' ? '#fff' : 'var(--text-secondary)',
-            }}
-          >
-            {lang === 'ru' ? '2. Виджет iOS' : '2. iOS Widget'}
-          </button>
-          <button
-            onClick={() => setActiveTab('shortcuts')}
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              fontSize: '11px',
-              fontWeight: 700,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'shortcuts' ? 'var(--accent-joy)' : 'transparent',
-              color: activeTab === 'shortcuts' ? '#150f02' : 'var(--text-secondary)',
-            }}
-          >
-            {lang === 'ru' ? '3. Команды iOS' : '3. Shortcuts'}
-          </button>
-        </div>
-
-        {/* TAB 1: PWA SHORTCUTS */}
-        {activeTab === 'pwa' && (
-          <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-            <h4 style={{ fontSize: '14px', color: '#fff', fontWeight: 800, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <PlusSquare size={16} color="var(--accent-cyan)" />
-              <span>{lang === 'ru' ? 'Добавление на экран Домой и Быстрые Действия' : 'Add to Homescreen & Quick Actions'}</span>
-            </h4>
-            <p style={{ fontSize: '12px', marginBottom: '12px' }}>
-              {lang === 'ru'
-                ? 'Веб-приложение XPance поддерживает нативный режим PWA. После добавления на рабочий стол оно работает без адресной строки браузера как обычное приложение.'
-                : 'XPance operates as a standalone PWA without browser URL bars once saved to your homescreen.'}
-            </p>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
-              <div style={{ fontWeight: 700, color: '#fff', fontSize: '12px', marginBottom: '6px' }}>
-                {lang === 'ru' ? '📱 Инструкция для iPhone (Safari):' : '📱 For iPhone (Safari):'}
-              </div>
-              <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <li>Откройте сайт <strong>mishganchick.github.io/xpance/</strong> в браузере Safari.</li>
-                <li>Нажмите системную кнопку <strong>«Поделиться»</strong> (квадрат со стрелкой вверх по центру внизу).</li>
-                <li>Прокрутите вниз и выберите <strong>«На экран "Домой"»</strong> (Add to Home Screen).</li>
-                <li>Нажмите <strong>«Добавить»</strong>. На рабочем столе появится космический маскот XPance!</li>
-              </ol>
+        {/* ================= ANDROID SECTION ================= */}
+        {platform === 'android' && (
+          <div>
+            {/* Sub-tabs for Android */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '6px',
+                marginBottom: '14px',
+              }}
+            >
+              <button
+                onClick={() => setAndroidTab('shortcuts')}
+                style={{
+                  padding: '7px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: androidTab === 'shortcuts' ? 'rgba(0, 230, 153, 0.2)' : 'rgba(255,255,255,0.03)',
+                  color: androidTab === 'shortcuts' ? '#00e699' : 'var(--text-secondary)',
+                  borderBottom: androidTab === 'shortcuts' ? '2px solid #00e699' : 'none',
+                }}
+              >
+                1. Выносные кнопки
+              </button>
+              <button
+                onClick={() => setAndroidTab('install')}
+                style={{
+                  padding: '7px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: androidTab === 'install' ? 'rgba(0, 217, 255, 0.2)' : 'rgba(255,255,255,0.03)',
+                  color: androidTab === 'install' ? '#00d9ff' : 'var(--text-secondary)',
+                  borderBottom: androidTab === 'install' ? '2px solid #00d9ff' : 'none',
+                }}
+              >
+                2. Установка PWA
+              </button>
+              <button
+                onClick={() => setAndroidTab('kwgt')}
+                style={{
+                  padding: '7px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: androidTab === 'kwgt' ? 'rgba(123, 97, 255, 0.2)' : 'rgba(255,255,255,0.03)',
+                  color: androidTab === 'kwgt' ? '#c4b5fd' : 'var(--text-secondary)',
+                  borderBottom: androidTab === 'kwgt' ? '2px solid #a78bfa' : 'none',
+                }}
+              >
+                3. Виджет KWGT
+              </button>
             </div>
 
-            <div style={{ background: 'rgba(0, 230, 153, 0.08)', border: '1px solid rgba(0, 230, 153, 0.3)', borderRadius: '10px', padding: '12px' }}>
-              <div style={{ fontWeight: 800, color: '#00e699', fontSize: '12px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Zap size={14} />
-                <span>{lang === 'ru' ? 'Секретная фишка: Меню быстрого расхода (Haptic Touch)' : 'Haptic Touch Quick Actions'}</span>
+            {/* ANDROID METHOD 1: PINNED SHORTCUTS (The native Android superpower!) */}
+            {androidTab === 'shortcuts' && (
+              <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
+                <div
+                  style={{
+                    background: 'rgba(0, 230, 153, 0.08)',
+                    border: '1px solid rgba(0, 230, 153, 0.3)',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    marginBottom: '14px',
+                  }}
+                >
+                  <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#00e699', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Zap size={16} />
+                    <span>Главная фишка Android: Любое действие можно вынести на экран!</span>
+                  </h4>
+                  <p style={{ fontSize: '12px', color: '#e2e8f0', margin: '0 0 10px' }}>
+                    В Android (Samsung, Pixel, Xiaomi, Honor и др.) вы можете превратить быстрые действия приложения в отдельные кнопки-виджеты на рабочем столе:
+                  </p>
+                  <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#cbd5e1' }}>
+                    <li>
+                      Убедитесь, что XPance установлен на экран телефона (в Chrome нажмите три точки ➔ <strong>«Установить приложение»</strong>).
+                    </li>
+                    <li>
+                      Найдите иконку XPance с маскотом на рабочем столе и <strong>зажмите её пальцем на 1 секунду</strong>.
+                    </li>
+                    <li>
+                      Появится меню быстрых действий:
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '6px 0' }}>
+                        <span style={{ background: 'rgba(0, 230, 153, 0.2)', color: '#00e699', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>⚡ Внести расход</span>
+                        <span style={{ background: 'rgba(255, 183, 3, 0.2)', color: '#ffb703', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>🎯 Дневной бюджет</span>
+                        <span style={{ background: 'rgba(123, 97, 255, 0.2)', color: '#c4b5fd', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>🏆 Зал ачивок</span>
+                      </div>
+                    </li>
+                    <li>
+                      <strong>Зажмите палец на пункте «Внести расход» и потяните его!</strong> Перетащите его в любое удобное место экрана.
+                    </li>
+                  </ol>
+                </div>
+
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700, marginBottom: '4px' }}>
+                    🚀 Как это работает в повседневной жизни:
+                  </div>
+                  <p style={{ fontSize: '11px', margin: 0, color: 'var(--text-muted)' }}>
+                    Вы купили кофе или оплатили покупку ➔ нажимаете 1 раз на вынесенную иконку «Внести расход» ➔ сразу открывается поле ввода суммы с открытой клавиатурой! Ввод занимает всего 2 секунды.
+                  </p>
+                </div>
               </div>
-              <p style={{ fontSize: '12px', color: '#e2e8f0', margin: 0 }}>
-                {lang === 'ru'
-                  ? 'Зажмите палец на иконке XPance на рабочем столе телефона — появится быстрое меню: «Внести расход», «Дневной бюджет» и «Зал ачивок». Одно нажатие — и вы сразу вводите сумму!'
-                  : 'Long press the XPance icon on your homescreen to instantly trigger "Add Expense", "Daily Budget", or "Achievements".'}
-              </p>
-            </div>
+            )}
+
+            {/* ANDROID METHOD 2: INSTALL PWA */}
+            {androidTab === 'install' && (
+              <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#fff', margin: '0 0 10px' }}>
+                  Установка автономного приложения на Android
+                </h4>
+                <p style={{ fontSize: '12px', marginBottom: '14px' }}>
+                  XPance превращается в полноценное Android-приложение без рамок и строк браузера:
+                </p>
+
+                {hasInstallPrompt && onInstallClick ? (
+                  <button
+                    onClick={onInstallClick}
+                    className="btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      background: 'linear-gradient(135deg, #00e699 0%, #00b4d8 100%)',
+                      color: '#051410',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginBottom: '14px',
+                      boxShadow: '0 0 20px rgba(0, 230, 153, 0.3)',
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>📲 Установить XPance на этот Android в 1 клик</span>
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+                    <div style={{ fontWeight: 700, color: '#fff', fontSize: '12px', marginBottom: '6px' }}>
+                      Инструкция для Chrome на Android:
+                    </div>
+                    <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <li>Откройте сайт <strong>mishganchick.github.io/xpance/</strong> в Google Chrome.</li>
+                      <li>Нажмите <strong>три точки</strong> в правом верхнем углу браузера.</li>
+                      <li>Выберите <strong>«Установить приложение»</strong> (или «Добавить на главный экран»).</li>
+                      <li>Нажмите «Установить». Иконка космического маскота появится среди ваших приложений!</li>
+                    </ol>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ANDROID METHOD 3: KWGT LIVE WIDGET */}
+            {androidTab === 'kwgt' && (
+              <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#c4b5fd', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={16} />
+                  <span>Интерактивный виджет через KWGT (Kustom Widget)</span>
+                </h4>
+                <p style={{ fontSize: '12px', marginBottom: '12px' }}>
+                  <strong>KWGT</strong> — это самое популярное в мире приложение для создания любых кастомных виджетов на Android (более 10 млн скачиваний):
+                </p>
+
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+                  <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li>
+                      Установите бесплатный <a href="https://play.google.com/store/apps/details?id=org.kustom.widget" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>KWGT Kustom Widget в Google Play</a>.
+                    </li>
+                    <li>
+                      На рабочем столе Android зажмите пустую область ➔ выберите <strong>«Виджеты»</strong> ➔ найдите <strong>KWGT</strong> ➔ выберите размер <strong>2x2</strong> или <strong>4x2</strong>.
+                    </li>
+                    <li>
+                      Нажмите на созданный виджет ➔ добавьте фигуру (фон), текст («Дневной лимит: ${dailyFormatted}») и изображение маскота.
+                    </li>
+                    <li>
+                      Во вкладке <strong>Touch (Действие при нажатии)</strong> выберите <strong>«Open Link»</strong> и вставьте ссылку прямого вызова расхода:
+                    </li>
+                  </ol>
+
+                  <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={liveAppUrl}
+                      style={{ fontSize: '11px', flex: 1, padding: '6px 10px', background: 'rgba(0,0,0,0.4)', color: '#00e699', border: '1px solid var(--border-subtle)' }}
+                    />
+                    <button
+                      onClick={handleCopyUrl}
+                      className="btn-primary"
+                      style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 700, background: copiedUrl ? '#00e699' : 'var(--accent-cyan)', color: '#051410' }}
+                    >
+                      {copiedUrl ? 'Скопировано!' : 'Копировать'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* TAB 2: SCRIPTABLE LIVE WIDGET */}
-        {activeTab === 'scriptable' && (
+        {/* ================= iOS SECTION ================= */}
+        {platform === 'ios' && (
           <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-            <h4 style={{ fontSize: '14px', color: '#fff', fontWeight: 800, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={16} color="#7b61ff" />
-              <span>{lang === 'ru' ? 'Настоящий интерактивный виджет через Scriptable (iOS)' : 'Real iOS Homescreen Widget via Scriptable'}</span>
-            </h4>
-            <p style={{ fontSize: '12px', marginBottom: '12px' }}>
-              {lang === 'ru'
-                ? 'В iOS приложения из браузера не могут напрямую размещать виджеты на рабочем столе. Но с помощью популярного бесплатного приложения Scriptable (из App Store) вы можете создать живой виджет с маскотом за 1 минуту:'
-                : 'Using the free Scriptable app from the App Store, you can place a live XPance widget on your iOS homescreen in 1 minute:'}
-            </p>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
+              <div style={{ fontWeight: 800, color: '#fff', fontSize: '13px', marginBottom: '6px' }}>
+                📱 Живой виджет на рабочий стол iPhone через Scriptable:
+              </div>
               <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <li>
-                  Установите бесплатное приложение <a href="https://apps.apple.com/app/scriptable/id1405454705" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>Scriptable в App Store</a>.
-                </li>
-                <li>
-                  Нажмите кнопку ниже <strong>«Скопировать код виджета»</strong>.
-                </li>
-                <li>
-                  Откройте Scriptable, нажмите <strong>«+»</strong> в правом верхнем углу, вставьте скопированный код и назовите скрипт <strong>XPance</strong>.
-                </li>
-                <li>
-                  Вернитесь на рабочий стол iPhone, зажмите пустую область ➔ нажмите <strong>«+»</strong> ➔ выберите виджет <strong>Scriptable</strong> ➔ выберите скрипт <strong>XPance</strong>. Готово!
-                </li>
+                <li>Установите бесплатный <a href="https://apps.apple.com/app/scriptable/id1405454705" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>Scriptable в App Store</a>.</li>
+                <li>Нажмите кнопку ниже <strong>«Скопировать код виджета»</strong>.</li>
+                <li>Откройте Scriptable, нажмите <strong>«+»</strong>, вставьте скопированный код и назовите скрипт <strong>XPance</strong>.</li>
+                <li>На рабочем столе iPhone зажмите экран ➔ нажмите <strong>«+»</strong> ➔ выберите <strong>Scriptable</strong> ➔ укажите скрипт <strong>XPance</strong>. Готово!</li>
               </ol>
             </div>
 
@@ -356,40 +525,8 @@ Script.complete();`;
               }}
             >
               {copiedCode ? <Check size={16} /> : <Copy size={16} />}
-              <span>{copiedCode ? (lang === 'ru' ? '✅ Код скопирован в буфер!' : '✅ Copied to clipboard!') : (lang === 'ru' ? '📋 Скопировать код виджета для Scriptable' : '📋 Copy Scriptable Widget Code')}</span>
+              <span>{copiedCode ? '✅ Код скопирован в буфер!' : '📋 Скопировать код виджета для Scriptable'}</span>
             </button>
-          </div>
-        )}
-
-        {/* TAB 3: APPLE SHORTCUTS */}
-        {activeTab === 'shortcuts' && (
-          <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-            <h4 style={{ fontSize: '14px', color: '#fff', fontWeight: 800, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Zap size={16} color="var(--accent-joy)" />
-              <span>{lang === 'ru' ? 'Виджет быстрых команд Apple (Shortcuts)' : 'Apple Shortcuts Widget'}</span>
-            </h4>
-            <p style={{ fontSize: '12px', marginBottom: '12px' }}>
-              {lang === 'ru'
-                ? 'Вы можете добавить кнопку «Записать расход XPance» на Экран блокировки (Lock Screen) или на кнопку Action Button (на iPhone 15/16 Pro):'
-                : 'Place an "Add Expense" button right on your iOS Lock Screen or Action Button:'}
-            </p>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '12px' }}>
-              <ol style={{ paddingLeft: '18px', margin: 0, fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <li>Откройте встроенное приложение <strong>«Команды» (Shortcuts)</strong> на iPhone.</li>
-                <li>Нажмите <strong>«+»</strong> (Новая команда) ➔ добавьте действие <strong>«Открыть URL»</strong>.</li>
-                <li>
-                  В поле URL вставьте:
-                  <div style={{ margin: '4px 0' }}>
-                    <code style={{ color: '#00e699', background: 'rgba(0,0,0,0.4)', padding: '3px 6px', borderRadius: '4px', fontSize: '11px', wordBreak: 'break-all' }}>
-                      https://mishganchick.github.io/xpance/?action=add_expense
-                    </code>
-                  </div>
-                </li>
-                <li>Назовите команду <strong>«Расход XPance»</strong> и выберите иконку.</li>
-                <li>Теперь добавьте эту команду в виде виджета на экран блокировки или рабочий стол!</li>
-              </ol>
-            </div>
           </div>
         )}
       </div>

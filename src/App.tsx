@@ -718,6 +718,8 @@ export const App: React.FC = () => {
         onClose={() => setIsWidgetModalOpen(false)}
         budget={vault.budget}
         transactions={vault.transactions}
+        hasInstallPrompt={Boolean(installPrompt)}
+        onInstallClick={handleInstallClick}
         lang={lang}
       />
     </div>
