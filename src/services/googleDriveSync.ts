@@ -82,24 +82,31 @@ export function uploadBackupFile(): Promise<AppDataVault> {
   });
 }
 
+export const DEFAULT_CLIENT_ID = '916734423312-5j7ps0jcc7mpr29h8t5e0ml7dl56nmpl.apps.googleusercontent.com';
+
 /**
  * Google Drive REST API V3 Helper
  */
 export class GoogleDriveSyncService {
-  private clientId: string = '';
+  private clientId: string = DEFAULT_CLIENT_ID;
   private token: string | null = null;
   private tokenClient: any = null;
   private userEmail: string | null = null;
 
   constructor(clientId?: string) {
-    if (clientId) {
-      this.clientId = clientId;
+    this.clientId = clientId || (typeof localStorage !== 'undefined' ? localStorage.getItem('xpance_gdrive_client_id') : '') || DEFAULT_CLIENT_ID;
+    if (typeof localStorage !== 'undefined') {
+      this.token = localStorage.getItem('xpance_gdrive_token') || null;
+      this.userEmail = localStorage.getItem('xpance_gdrive_email') || null;
     }
   }
 
   public setClientId(clientId: string) {
     this.clientId = clientId;
     this.tokenClient = null; // Recreate on next auth
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('xpance_gdrive_client_id', clientId);
+    }
   }
 
   public getClientId(): string {
@@ -107,16 +114,117 @@ export class GoogleDriveSyncService {
   }
 
   public isAuthorized(): boolean {
-    return Boolean(this.token);
+    if (Boolean(this.token)) return true;
+    if (typeof localStorage !== 'undefined') {
+      const savedToken = localStorage.getItem('xpance_gdrive_token');
+      const savedEmail = localStorage.getItem('xpance_gdrive_email');
+      return Boolean(savedEmail && (savedToken || localStorage.getItem('xpance_gdrive_expires')));
+    }
+    return false;
   }
 
-  public getToken(): string | null {
-    return this.token;
+  public async ensureValidToken(): Promise<string> {
+    const savedToken = typeof localStorage !== 'undefined' ? localStorage.getItem('xpance_gdrive_token') : null;
+    const savedExpires = typeof localStorage !== 'undefined' ? localStorage.getItem('xpance_gdrive_expires') : null;
+    const expiresAt = savedExpires ? parseInt(savedExpires, 10) : 0;
+
+    // If active token has > 2 minutes of validity left
+    if (this.token && expiresAt && Date.now() < expiresAt - 120000) {
+      return this.token;
+    }
+
+    if (savedToken && expiresAt && Date.now() < expiresAt - 120000) {
+      this.token = savedToken;
+      return savedToken;
+    }
+
+    // Attempt silent background refresh
+    const activeClientId = this.clientId || (typeof localStorage !== 'undefined' ? localStorage.getItem('xpance_gdrive_client_id') : '') || DEFAULT_CLIENT_ID;
+    this.clientId = activeClientId;
+
+    try {
+      await this.initGis();
+      const newToken = await this.requestToken('');
+      return newToken;
+    } catch (err) {
+      if (this.token) {
+        return this.token; // fallback to current token if renewal fails (e.g. temporary offline)
+      }
+      throw err;
+    }
+  }
+
+  public async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+    let token = await this.ensureValidToken();
+    let headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
+      Authorization: `Bearer ${token}`,
+    };
+
+    let resp = await fetch(url, { ...options, headers });
+
+    // If 401 Unauthorized, automatically renew token silently and retry once
+    if (resp.status === 401) {
+      console.log('Google Drive 401 Unauthorized received, performing automatic silent re-auth...');
+      try {
+        token = await this.requestToken('');
+        headers.Authorization = `Bearer ${token}`;
+        resp = await fetch(url, { ...options, headers });
+      } catch (renewErr) {
+        console.warn('Silent token renewal failed after 401:', renewErr);
+      }
+    }
+
+    return resp;
+  }
+
+  public async restoreSession(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    const savedToken = localStorage.getItem('xpance_gdrive_token');
+    const savedExpires = localStorage.getItem('xpance_gdrive_expires');
+    const savedEmail = localStorage.getItem('xpance_gdrive_email');
+    const savedClientId = localStorage.getItem('xpance_gdrive_client_id') || this.clientId;
+
+    if (savedClientId) {
+      this.clientId = savedClientId;
+    }
+
+    if (savedToken && savedExpires) {
+      const expiresAt = parseInt(savedExpires, 10);
+      if (Date.now() < expiresAt - 120000) {
+        this.token = savedToken;
+        this.userEmail = savedEmail;
+        return true;
+      }
+    }
+
+    // Try silent refresh if user was previously authorized
+    if (savedEmail || savedToken) {
+      try {
+        await this.initGis();
+        await this.requestToken('');
+        return true;
+      } catch (e) {
+        console.warn('Silent session restore failed:', e);
+        if (savedToken) {
+          this.token = savedToken;
+          this.userEmail = savedEmail;
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   public disconnect() {
     this.token = null;
     this.userEmail = null;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('xpance_gdrive_token');
+      localStorage.removeItem('xpance_gdrive_expires');
+      localStorage.removeItem('xpance_gdrive_email');
+    }
   }
 
   public async initGis(): Promise<boolean> {
@@ -131,7 +239,7 @@ export class GoogleDriveSyncService {
         script.defer = true;
         document.head.appendChild(script);
       }
-      // Wait for script to load
+      // Wait for GIS script to load
       for (let i = 0; i < 40; i++) {
         if (gWindow.google?.accounts?.oauth2) break;
         await new Promise((r) => setTimeout(r, 100));
@@ -143,7 +251,7 @@ export class GoogleDriveSyncService {
     }
 
     if (!this.clientId) {
-      throw new Error('Google Client ID не указан');
+      this.clientId = DEFAULT_CLIENT_ID;
     }
 
     this.tokenClient = gWindow.google.accounts.oauth2.initTokenClient({
@@ -159,7 +267,7 @@ export class GoogleDriveSyncService {
     return true;
   }
 
-  public async requestToken(): Promise<string> {
+  public async requestToken(promptMode: 'consent' | 'none' | '' = ''): Promise<string> {
     if (!this.tokenClient) {
       await this.initGis();
     }
@@ -168,15 +276,47 @@ export class GoogleDriveSyncService {
         reject(new Error('Google Client ID не настроен'));
         return;
       }
-      this.tokenClient.callback = (resp: any) => {
+
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('Время ожидания ответа Google истекло'));
+        }
+      }, 30000);
+
+      this.tokenClient.callback = async (resp: any) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+
         if (resp.error) {
           reject(new Error(resp.error_description || resp.error));
           return;
         }
+
         this.token = resp.access_token;
+        const expiresIn = resp.expires_in ? parseInt(resp.expires_in, 10) : 3500;
+        const expiresAt = Date.now() + expiresIn * 1000;
+
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('xpance_gdrive_token', resp.access_token);
+          localStorage.setItem('xpance_gdrive_expires', expiresAt.toString());
+          if (this.clientId) {
+            localStorage.setItem('xpance_gdrive_client_id', this.clientId);
+          }
+        }
+
+        // Fetch user email
+        const email = await this.getUserEmail();
+        if (email && typeof localStorage !== 'undefined') {
+          localStorage.setItem('xpance_gdrive_email', email);
+        }
+
         resolve(resp.access_token);
       };
-      this.tokenClient.requestAccessToken({ prompt: '' });
+
+      this.tokenClient.requestAccessToken({ prompt: promptMode });
     });
   }
 
@@ -209,11 +349,8 @@ export class GoogleDriveSyncService {
    * Получить метаданные файла xpance_vault.json с Google Диска
    */
   public async findVaultFileDetails(): Promise<{ id: string; name: string; modifiedTime: string } | null> {
-    if (!this.token) throw new Error('Не авторизован в Google');
     const q = encodeURIComponent(`(name = '${DRIVE_FILE_NAME}' or name = '${LEGACY_DRIVE_FILE_NAME}') and trashed = false`);
-    const resp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)`, {
-      headers: { Authorization: `Bearer ${this.token}` },
-    });
+    const resp = await this.fetchWithAuth(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)`);
     if (!resp.ok) {
       throw new Error(`Ошибка обращения к Google Drive: ${resp.statusText}`);
     }
@@ -232,7 +369,6 @@ export class GoogleDriveSyncService {
    * Загрузить vault на Google Диск
    */
   public async uploadVault(vault: AppDataVault): Promise<void> {
-    if (!this.token) throw new Error('Не авторизован в Google');
     const existingFile = await this.findVaultFileDetails();
 
     const fileContent = JSON.stringify(vault, null, 2);
@@ -253,14 +389,17 @@ export class GoogleDriveSyncService {
       method = 'PATCH';
     }
 
-    const resp = await fetch(url, {
+    const resp = await this.fetchWithAuth(url, {
       method,
-      headers: { Authorization: `Bearer ${this.token}` },
       body: form,
     });
 
     if (!resp.ok) {
       throw new Error(`Ошибка загрузки на Google Drive: ${resp.statusText}`);
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('xpance_last_synced_at', new Date().toISOString());
     }
   }
 
@@ -268,19 +407,20 @@ export class GoogleDriveSyncService {
    * Скачать vault с Google Диска
    */
   public async downloadVault(): Promise<AppDataVault | null> {
-    if (!this.token) throw new Error('Не авторизован в Google');
     const fileId = await this.findVaultFile();
     if (!fileId) return null;
 
-    const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-      headers: { Authorization: `Bearer ${this.token}` },
-    });
+    const resp = await this.fetchWithAuth(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
 
     if (!resp.ok) {
       throw new Error(`Ошибка чтения файла с Google Drive: ${resp.statusText}`);
     }
 
-    return await resp.json();
+    const downloadedVault = await resp.json();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('xpance_last_synced_at', new Date().toISOString());
+    }
+    return downloadedVault;
   }
 }
 

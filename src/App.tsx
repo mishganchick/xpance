@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Account, AppDataVault, CurrencyCode, Transaction, Achievement, PeriodBudget } from './types/finance';
 import { loadVaultFromStorage, saveVaultToStorage, getInitialVault, clearVaultStorage, getDemoVault } from './services/storage';
 import { calculateNetWorth, formatMoney } from './services/currencyService';
@@ -16,6 +16,7 @@ import { AchievementToast } from './components/AchievementToast';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { Trash2 } from 'lucide-react';
 import { Language, getTranslation, getLocalizedLevelTitle } from './services/i18n';
+import { driveSync } from './services/googleDriveSync';
 
 export const App: React.FC = () => {
   const [vault, setVault] = useState<AppDataVault>(() => loadVaultFromStorage());
@@ -30,6 +31,9 @@ export const App: React.FC = () => {
   // Period Budget Modal State
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetModalMode, setBudgetModalMode] = useState<'configure' | 'topup'>('configure');
+
+  // Google Drive Continuous Auto-Sync State
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
   // i18n language state (stored in localStorage)
   const [lang, setLang] = useState<Language>(() => {
@@ -74,10 +78,15 @@ export const App: React.FC = () => {
 
   // Auto-save vault and re-evaluate gamification when transactions/accounts change
   const updateVault = (newVault: AppDataVault, checkAchievements = true) => {
+    const stampedVault: AppDataVault = {
+      ...newVault,
+      lastUpdated: new Date().toISOString(),
+    };
+
     if (checkAchievements) {
-      const evalResult = evaluateGamification(newVault);
+      const evalResult = evaluateGamification(stampedVault);
       const evaluatedVault: AppDataVault = {
-        ...newVault,
+        ...stampedVault,
         achievements: evalResult.updatedAchievements,
         gamification: evalResult.updatedGamification,
       };
@@ -89,10 +98,143 @@ export const App: React.FC = () => {
       saveVaultToStorage(evaluatedVault);
       setVault(evaluatedVault);
     } else {
-      saveVaultToStorage(newVault);
-      setVault(newVault);
+      saveVaultToStorage(stampedVault);
+      setVault(stampedVault);
     }
   };
+
+  // References for reliable background synchronization
+  const vaultRef = useRef<AppDataVault>(vault);
+  const lastSyncedVaultJsonRef = useRef<string>('');
+  const isPullingRemoteRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    vaultRef.current = vault;
+  }, [vault]);
+
+  // Continuous Auto-Sync: Initial pull from Google Drive on app launch
+  useEffect(() => {
+    let isMounted = true;
+    const runInitialSync = async () => {
+      try {
+        const hasSession = await driveSync.restoreSession();
+        if (hasSession && isMounted) {
+          setSyncStatus('syncing');
+          const remoteVault = await driveSync.downloadVault();
+          if (remoteVault && remoteVault.accounts && remoteVault.accounts.length > 0) {
+            const remoteTime = new Date(remoteVault.lastUpdated || 0).getTime();
+            const localTime = new Date(vaultRef.current.lastUpdated || 0).getTime();
+            if (remoteTime > localTime) {
+              isPullingRemoteRef.current = true;
+              saveVaultToStorage(remoteVault);
+              setVault(remoteVault);
+              lastSyncedVaultJsonRef.current = JSON.stringify(remoteVault);
+              setTimeout(() => { isPullingRemoteRef.current = false; }, 500);
+            } else if (localTime > remoteTime) {
+              await driveSync.uploadVault(vaultRef.current);
+              lastSyncedVaultJsonRef.current = JSON.stringify(vaultRef.current);
+            } else {
+              lastSyncedVaultJsonRef.current = JSON.stringify(remoteVault);
+            }
+          } else {
+            // First time on Google Drive: upload local vault
+            await driveSync.uploadVault(vaultRef.current);
+            lastSyncedVaultJsonRef.current = JSON.stringify(vaultRef.current);
+          }
+          if (isMounted) setSyncStatus('synced');
+        }
+      } catch (err) {
+        console.warn('Initial cloud sync error:', err);
+        if (isMounted) setSyncStatus('idle');
+      }
+    };
+
+    runInitialSync();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Continuous Auto-Sync: Auto-pull when switching tabs or focusing window (multi-device sync)
+  useEffect(() => {
+    let lastCheckTime = 0;
+    const checkRemoteUpdates = async () => {
+      if (!driveSync.isAuthorized() || isPullingRemoteRef.current) return;
+      const now = Date.now();
+      if (now - lastCheckTime < 8000) return; // Debounce checks
+      lastCheckTime = now;
+
+      try {
+        const remoteDetails = await driveSync.findVaultFileDetails();
+        if (!remoteDetails) return;
+
+        const remoteModTime = new Date(remoteDetails.modifiedTime).getTime();
+        const lastLocalSync = typeof localStorage !== 'undefined' ? localStorage.getItem('xpance_last_synced_at') : null;
+        const lastLocalSyncTime = lastLocalSync ? new Date(lastLocalSync).getTime() : 0;
+
+        // If file on Drive is newer than last local sync
+        if (remoteModTime > lastLocalSyncTime + 2000) {
+          setSyncStatus('syncing');
+          const remoteVault = await driveSync.downloadVault();
+          if (remoteVault && remoteVault.accounts && remoteVault.accounts.length > 0) {
+            const remoteTime = new Date(remoteVault.lastUpdated || 0).getTime();
+            const localTime = new Date(vaultRef.current.lastUpdated || 0).getTime();
+
+            if (remoteTime > localTime) {
+              isPullingRemoteRef.current = true;
+              saveVaultToStorage(remoteVault);
+              setVault(remoteVault);
+              lastSyncedVaultJsonRef.current = JSON.stringify(remoteVault);
+              setTimeout(() => { isPullingRemoteRef.current = false; }, 500);
+            }
+          }
+          setSyncStatus('synced');
+        }
+      } catch (e) {
+        console.warn('Auto background pull check error:', e);
+      }
+    };
+
+    const onFocusOrVisible = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        checkRemoteUpdates();
+      }
+    };
+
+    window.addEventListener('focus', onFocusOrVisible);
+    document.addEventListener('visibilitychange', onFocusOrVisible);
+    const interval = setInterval(checkRemoteUpdates, 35000);
+
+    return () => {
+      window.removeEventListener('focus', onFocusOrVisible);
+      document.removeEventListener('visibilitychange', onFocusOrVisible);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Continuous Auto-Sync: Auto-push changes to Google Drive in background (debounced 1.5s)
+  useEffect(() => {
+    if (!driveSync.isAuthorized() || isPullingRemoteRef.current) return;
+
+    const currentJson = JSON.stringify(vault);
+    if (currentJson === lastSyncedVaultJsonRef.current) {
+      return;
+    }
+
+    setSyncStatus('syncing');
+    const timer = setTimeout(async () => {
+      try {
+        await driveSync.uploadVault(vault);
+        lastSyncedVaultJsonRef.current = JSON.stringify(vault);
+        setSyncStatus('synced');
+      } catch (err) {
+        console.warn('Auto upload to Google Drive failed:', err);
+        setSyncStatus('error');
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [vault]);
 
   // Add Transaction
   const handleAddTransaction = (txData: Omit<Transaction, 'id'>) => {
@@ -314,7 +456,8 @@ export const App: React.FC = () => {
           }
         }}
         onOpenSync={() => setIsSyncModalOpen(true)}
-        isSyncConfigured={vault.syncConfig.isSignedIn || Boolean(vault.syncConfig.clientId)}
+        isSyncConfigured={driveSync.isAuthorized() || Boolean(vault.syncConfig?.clientId)}
+        syncStatus={syncStatus}
         viewMode={viewMode}
         onToggleViewMode={setViewMode}
         lang={lang}

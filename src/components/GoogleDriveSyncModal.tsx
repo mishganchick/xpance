@@ -130,16 +130,16 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
       if (details) {
         const modDate = new Date(details.modifiedTime).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US');
         setStatusMessage(lang === 'ru'
-          ? `✅ Успешный вход (${email || 'Google'}). На Диске найден бэкап от ${modDate}. Вы можете скачать его или обновить.`
-          : `✅ Signed in (${email || 'Google'}). Backup from ${modDate} found on Drive.`);
+          ? `✅ Успешный вход (${email || 'Google'}). Найдена копия от ${modDate}. Авто-синхронизация активна!`
+          : `✅ Signed in (${email || 'Google'}). Backup from ${modDate} found. Auto-sync is active!`);
       } else {
         // Auto upload first copy
         await driveSync.uploadVault(vault);
         const newDetails = await driveSync.findVaultFileDetails();
         setDriveFileDetails(newDetails);
         setStatusMessage(lang === 'ru'
-          ? `✅ Успешный вход (${email || 'Google'})! Текущие данные сохранены в Google Диск.`
-          : `✅ Signed in (${email || 'Google'})! Current data saved to your Google Drive.`);
+          ? `✅ Успешный вход (${email || 'Google'})! Текущие данные сохранены в Google Диск, авто-синхронизация включена.`
+          : `✅ Signed in (${email || 'Google'})! Data saved to Google Drive, auto-sync active.`);
       }
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
@@ -148,6 +148,10 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
         setErrorMessage(lang === 'ru'
           ? `Ошибка доступа Google: адрес «${currentOrigin}» не добавлен в «Authorized JavaScript origins» в Google Cloud Console для этого Client ID.`
           : `Origin error: «${currentOrigin}» is not in Authorized JavaScript origins in Google Cloud Console.`);
+      } else if (msg.includes('access_denied') || msg.includes('403') || msg.includes('verification') || msg.includes('проверку')) {
+        setErrorMessage(lang === 'ru'
+          ? `Ошибка 403 (access_denied): Google требует добавить ваш аккаунт в тестовые пользователи. Откройте Google Cloud Console ➔ «OAuth consent screen» ➔ прокрутите вниз до «Test users» ➔ нажмите «+ ADD USERS» и введите ваш Gmail.`
+          : `Error 403 (access_denied): Google requires adding your account as a Test user. Go to Google Cloud Console ➔ «OAuth consent screen» ➔ scroll to «Test users» ➔ «+ ADD USERS» and add your Gmail.`);
       } else {
         setErrorMessage(lang === 'ru' ? `Ошибка входа: ${msg}` : `Sign in error: ${msg}`);
       }
@@ -254,7 +258,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 800 }}>{t.backupModalTitle}</h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {lang === 'ru' ? 'Синхронизация между телефоном и ПК через Google Диск' : 'Sync between phone and PC via Google Drive'}
+                {lang === 'ru' ? 'Автоматическая синхронизация между телефоном и ПК через Google Диск' : 'Automatic sync between phone and PC via Google Drive'}
               </p>
             </div>
           </div>
@@ -319,19 +323,19 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <h4 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Key size={15} color="#00e699" />
-              <span>1. Google Drive Авто-Синхронизация</span>
+              <span>1. Бесшовная Авто-Синхронизация Google Drive</span>
             </h4>
             {isGoogleAuthorized && (
               <span style={{ fontSize: '11px', color: '#00e699', fontWeight: 700, background: 'rgba(0, 230, 153, 0.15)', padding: '2px 8px', borderRadius: '12px' }}>
-                🟢 Подключено
+                🟢 Всегда активно
               </span>
             )}
           </div>
 
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
             {lang === 'ru'
-              ? 'Сохраняет ваш файл xpance_vault.json прямо в личный Google Диск и позволяет в 1 клик переносить изменения между ПК и телефоном:'
-              : 'Syncs xpance_vault.json directly to your Google Drive to seamlessly keep PC and phone in sync:'}
+              ? 'Работает полностью автоматически: сохраняет изменения на Google Диск через 1.5 сек и сразу обновляет данные при открытии на любом вашем устройстве.'
+              : 'Works completely automatically: pushes changes in 1.5s and pulls latest data whenever opened on your phone or PC.'}
           </p>
 
           {!isGoogleAuthorized ? (
@@ -365,24 +369,34 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
                 }}
               >
                 <Key size={16} />
-                <span>{isProcessing ? (lang === 'ru' ? 'Подключение...' : 'Connecting...') : (lang === 'ru' ? 'Войти через Google и Синхронизировать' : 'Sign in with Google & Sync')}</span>
+                <span>{isProcessing ? (lang === 'ru' ? 'Подключение...' : 'Connecting...') : (lang === 'ru' ? 'Войти через Google (1 раз)' : 'Sign in with Google (once)')}</span>
               </button>
 
               <div
                 style={{
-                  fontSize: '10px',
-                  color: 'var(--text-muted)',
+                  fontSize: '11px',
+                  color: 'var(--text-secondary)',
                   lineHeight: '1.5',
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  padding: '8px 10px',
-                  borderRadius: '6px',
+                  background: 'rgba(0, 0, 0, 0.35)',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
                   border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
                 }}
               >
-                ⚠️ <strong>Важно:</strong> В настройках этого Client ID в <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>Google Cloud Console</a> в поле <em>«Authorized JavaScript origins»</em> добавьте:
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
-                  <code style={{ color: '#00e699', background: 'rgba(255,255,255,0.06)', padding: '2px 4px', borderRadius: '4px' }}>https://mishganchick.github.io</code>
-                  <code style={{ color: '#00e699', background: 'rgba(255,255,255,0.06)', padding: '2px 4px', borderRadius: '4px' }}>http://localhost:5173</code>
+                <div>
+                  ⚡ <strong>Если ошибка 403 (access_denied):</strong>
+                  <br />
+                  В <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>Google Cloud Console ➔ OAuth consent screen</a> прокрутите вниз до <strong>«Test users»</strong>, нажмите <strong>«+ ADD USERS»</strong> и добавьте ваш email.
+                </div>
+                <div style={{ marginTop: '4px' }}>
+                  🌐 <strong>Authorized JavaScript origins:</strong>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                    <code style={{ color: '#00e699', background: 'rgba(255,255,255,0.06)', padding: '2px 4px', borderRadius: '4px' }}>https://mishganchick.github.io</code>
+                    <code style={{ color: '#00e699', background: 'rgba(255,255,255,0.06)', padding: '2px 4px', borderRadius: '4px' }}>http://localhost:5173</code>
+                  </div>
                 </div>
               </div>
             </div>
@@ -410,9 +424,30 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
                 </button>
               </div>
 
+              {/* Continuous Auto-Sync Active Banner */}
+              <div
+                style={{
+                  background: 'rgba(0, 230, 153, 0.1)',
+                  border: '1px solid rgba(0, 230, 153, 0.25)',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <CheckCircle2 size={20} color="#00e699" style={{ flexShrink: 0 }} />
+                <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.4' }}>
+                  <strong style={{ color: '#00e699' }}>Постоянная фоновая синхронизация активна:</strong>
+                  <br />
+                  Все добавленные траты, доходы и бюджеты сохраняются автоматически в облако. Кнопки ниже нужны только для ручного контроля.
+                </div>
+              </div>
+
               {driveFileDetails && (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-                  📁 Файл на Google Диске: <strong>{driveFileDetails.name}</strong> (обновлен: {new Date(driveFileDetails.modifiedTime).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')})
+                  📁 Файл в облаке: <strong>{driveFileDetails.name}</strong> (обновлен: {new Date(driveFileDetails.modifiedTime).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')})
                 </div>
               )}
 
@@ -431,7 +466,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
                   }}
                 >
                   <Download size={14} />
-                  <span>{lang === 'ru' ? '⬇️ Скачать с Google Диска' : '⬇️ Download from Drive'}</span>
+                  <span>{lang === 'ru' ? 'Принудительно скачать' : 'Force Download'}</span>
                 </button>
 
                 <button
@@ -448,7 +483,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({
                   }}
                 >
                   <Upload size={14} />
-                  <span>{lang === 'ru' ? '⬆️ Загрузить на Google Диск' : '⬆️ Upload to Drive'}</span>
+                  <span>{lang === 'ru' ? 'Принудительно выгрузить' : 'Force Upload'}</span>
                 </button>
               </div>
             </div>

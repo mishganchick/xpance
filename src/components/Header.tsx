@@ -16,6 +16,7 @@ interface HeaderProps {
   onOpenAchievements: () => void;
   onOpenSync: () => void;
   isSyncConfigured: boolean;
+  syncStatus?: 'idle' | 'syncing' | 'synced' | 'error';
   viewMode: 'desktop' | 'mobile';
   onToggleViewMode: (mode: 'desktop' | 'mobile') => void;
 }
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAchievements,
   onOpenSync,
   isSyncConfigured,
+  syncStatus = 'idle',
   viewMode,
   onToggleViewMode,
 }) => {
@@ -131,9 +133,27 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Google Drive Sync Pill */}
-        <button className="currency-badge" onClick={onOpenSync} title={t.backupTooltip}>
-          <Cloud size={14} color={isSyncConfigured ? '#00e699' : '#94a3b8'} />
-          <span>{isSyncConfigured ? 'GDrive Sync' : (lang === 'en' ? 'Backup' : 'Бэкап')}</span>
+        <button
+          className="currency-badge"
+          onClick={onOpenSync}
+          title={t.backupTooltip}
+          style={{
+            borderColor: syncStatus === 'syncing' ? 'rgba(0, 217, 255, 0.4)' : syncStatus === 'synced' ? 'rgba(0, 230, 153, 0.4)' : undefined,
+          }}
+        >
+          <Cloud
+            size={14}
+            color={syncStatus === 'synced' ? '#00e699' : syncStatus === 'syncing' ? '#00d9ff' : isSyncConfigured ? '#00e699' : '#94a3b8'}
+          />
+          <span>
+            {syncStatus === 'syncing'
+              ? (lang === 'ru' ? 'Синхронизация...' : 'Syncing...')
+              : syncStatus === 'synced'
+              ? 'GDrive 🟢'
+              : isSyncConfigured
+              ? 'GDrive Sync'
+              : (lang === 'en' ? 'Backup' : 'Бэкап')}
+          </span>
         </button>
 
         {/* Gamification Trophy Badge */}
